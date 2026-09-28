@@ -19,14 +19,16 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 1 — MVP |
-| Active task | `P1-01` (tracker dictionary build pipeline) |
+| Active task | `P1-03` (request interception engine) |
 | Last updated | 2026-09-28 |
-| Blockers | None |
-| Next up | `P1-01` → `P1-02` → `P1-03` |
+| Blockers | `P1-01b` needs a machine where Chromium has network access (unavailable in the current sandbox) |
+| Next up | `P1-03` → `P1-04` → `P1-05`, then `P1-01b` before `P1-07` |
 
-**Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives are in place and
-verified: `npm run typecheck`, `lint`, `test` (86 unit tests), `build`, `check:egress`,
-and `test:e2e` (4 specs, real extension loaded into Chromium) all pass.
+**Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
+**`P1-01`/`P1-02` complete** with a documented scope reduction — see
+[docs/ADR-002-tracker-data-source.md](docs/ADR-002-tracker-data-source.md). The shipped
+dictionary is high-precision (208 hosts, 69 entities, every one attributed to a verified
+corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
 
 ---
 
@@ -148,9 +150,24 @@ CI workflow committed, `dist/` loads unpacked with zero console errors.
 
 **Strategic focus:** robust local interception + a non-intrusive live counter. No backend, no network calls.
 
-### `P1-01` Tracker dictionary build pipeline
+### `P1-01` Tracker dictionary build pipeline — **`[x]` done, scope reduced**
 **Deps:** `P0-03`
 **Original roadmap item:** *Static Tracker Dictionary (top 500 domains → corporate parents)*
+
+> **Two assumptions in the original plan were wrong.** Both are corrected in
+> [docs/ADR-002-tracker-data-source.md](docs/ADR-002-tracker-data-source.md).
+>
+> 1. **Tracker Radar is not permissively licensed.** It, Ghostery `trackerdb`, and
+>    Disconnect are all CC BY-**NC**-SA 4.0. NonCommercial is incompatible with Phase 3,
+>    and ShareAlike would propagate to our derived dictionary. Replaced by EasyPrivacy
+>    (CC BY-SA 3.0) plus a self-authored entity map.
+> 2. **The dictionary cannot be keyed by eTLD+1.** Filter lists block specific hosts
+>    (`match.adsrvr.org`, `d2v9ip.cloudfront.net`). Collapsing those to the registrable
+>    domain classified all of CloudFront and AWS as trackers. The artifact is keyed by
+>    **hostname**, matched by walking suffixes. A regression test guards this.
+>
+> **Delivered:** 208 hosts / 69 entities / 11.5 KB, 100% attributed to a verified
+> corporate parent. **Not delivered:** broad recall and prevalence ranking — see `P1-01b`.
 
 **Design**
 - Source of truth: DuckDuckGo Tracker Radar (`duckduckgo/tracker-radar`, permissive license — verify and record in `docs/LICENSES.md`). Optionally cross-reference Disconnect's `services.json` for categories.
@@ -178,14 +195,49 @@ CI workflow committed, `dist/` loads unpacked with zero console errors.
 4. Add a `docs/LICENSES.md` attribution entry.
 
 **Done when:**
-- `trackers.json` ≤ 120 KB minified and loads into memory in < 50 ms on a cold service worker start.
-- Unit test asserts: 500 ± 5 domains present, every domain maps to a valid entity id, every entity has ≥ 1 domain, no duplicate keys.
+- `trackers.json` ≤ 120 KB minified and loads into memory in < 50 ms on a cold service worker start. ✅ 11.5 KB
+- Unit test asserts: every host maps to a valid entity id, every entity has ≥ 1 host, no
+  category outside the enum, and no shared-CDN apex is present. ✅ `tests/unit/classifier.test.ts`
+- ~~500 ± 5 domains~~ → superseded; the 500-domain coverage target moves to `P1-01b`.
 
 ---
 
-### `P1-02` Categorization taxonomy
+### `P1-01b` Crawl-derived prevalence & recall expansion — **`[!]` blocked**
+**Deps:** `P1-04`
+**Blocker:** needs a machine where headless Chromium has network access. Verified
+unavailable in the current environment (`curl` works, Chromium returns
+`ERR_NAME_NOT_RESOLVED`), so this cannot be completed here.
+
+**Why it exists:** EasyPrivacy yields ~47k tracker host patterns (~977 KB) with no
+prevalence signal. Ranking by filter-rule count was tried and rejected — it surfaced
+Act-On, CloudFront and individual hotel chains as "top trackers", because rule volume
+measures list-maintenance effort, not tracker reach. Real prevalence requires observation.
+
+**Steps**
+1. Take the Tranco top 1,000 (free, academic, redistributable) as the crawl frontier.
+2. Drive the built extension over each site with Playwright; record every third-party
+   request host and the first-party domain that triggered it.
+3. Compute prevalence = (sites where host appears) / (sites crawled). This is a measured
+   figure we own outright, with no upstream licence attached.
+4. Rank EasyPrivacy hosts by measured prevalence; take the top N that fits the size budget.
+5. Persist the raw crawl as the `P1-07` ground-truth corpus — the same run feeds both tasks.
+6. Replace `rank` with `prevalence` in the artifact and update the dictionary tests.
+
+**Done when:** `trackers.json` covers ≥ 500 hosts ranked by measured prevalence, stays
+≤ 120 KB, and `P1-07` recall ≥ 85%.
+
+---
+
+### `P1-02` Categorization taxonomy — **`[x]` done**
 **Deps:** `P1-01`
 **Original roadmap item:** *Basic Categorization — Advertising/Profiling, Site Analytics, Hidden Behavioral Tracking*
+
+**Outcome:** categories are assigned per domain in the self-authored seed rather than
+mapped from an upstream taxonomy, so there is no third-party mapping table to maintain.
+The behavioral override list is implemented in
+[src/background/classifier.ts](src/background/classifier.ts) and covers all 10 named
+vendors. Unknown third parties resolve via `classifyUnknown` and are counted separately,
+never folded into the headline number.
 
 **Steps**
 1. Define `enum TrackerCategory { Advertising = 0, Analytics = 1, Behavioral = 2, Unknown = 3 }` in `shared/types.ts`.
@@ -512,6 +564,8 @@ Opt-in rate ≥ 15% · two signed B2B trials · zero regulatory complaints · ex
 
 | Risk | Impact | Mitigation | Owner task |
 |---|---|---|---|
+| Curated tracker datasets are NonCommercial | Blocks Phase 3; forces a late rebuild | Use EasyPrivacy (CC BY-SA 3.0) + self-authored entity map | `P1-01`, ADR-002 |
+| eTLD+1 keying misclassifies shared CDNs | Precision collapse, user distrust | Hostname-keyed dictionary + regression test on CDN apexes | `P1-01` |
 | `declarativeNetRequest` cannot observe requests in production | Breaks the entire MVP premise | Use non-blocking `webRequest` for observation; DNR only for GPC headers/blocking | `P1-03` |
 | MV3 service worker termination loses tab state | Counter resets mid-session | Mirror to `chrome.storage.session` on every debounced batch | `P1-03` |
 | `<all_urls>` + `webRequest` triggers Web Store review friction | Launch delay | Pre-write permission justifications; minimize permissions; staged rollout | `P0-02`, `P2-08` |
@@ -526,7 +580,8 @@ Opt-in rate ≥ 15% · two signed B2B trials · zero regulatory complaints · ex
 | Phase | Criterion | Measured by | Threshold |
 |---|---|---|---|
 | 1 | Page-load degradation | `P1-06` harness | ≤ 5% per domain, ≤ 2% aggregate |
-| 1 | Detection recall | `P1-07` harness | ≥ 85% recall, ≥ 95% precision |
+| 1 | Detection recall | `P1-07` harness (needs `P1-01b`) | ≥ 85% recall, ≥ 95% precision |
+| 1 | Dictionary precision | `P1-01` dictionary tests | 100% attributed, 0 shared-CDN apexes |
 | 1 | UI conflict | 20-site × 3-viewport matrix | 0 overlaps, 0 console errors |
 | 2 | Scale | Load test | 10× 10k DAU |
 | 2 | Organic loop | UTM + opt-in telemetry | ≥ 3% share/invite |

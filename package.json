@@ -12,7 +12,9 @@
     "format": "prettier --write .",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
-    "check:egress": "node tools/check-egress.mjs"
+    "check:egress": "node tools/check-egress.mjs",
+    "update-trackers": "node tools/build-tracker-db.mjs --refresh",
+    "build-tracker-db": "node tools/build-tracker-db.mjs"
   },
   "repository": {
     "type": "git",
