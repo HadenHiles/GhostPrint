@@ -1,4 +1,5 @@
 import { classify, classifyUnknown } from './classifier';
+import { record as recordHistory } from './history';
 import { broadcast } from './messaging';
 import { forgetTab, getSummary, hydrate, record, resetTab } from './tab-state';
 import { getRegistrableDomain, isThirdParty } from '@/shared/domain';
@@ -73,6 +74,14 @@ function handleRequest(details: chrome.webRequest.OnBeforeRequestDetails): void 
   });
 
   if (!isNew) return;
+
+  // Only first sightings reach history, so a page that pings one tracker 500 times
+  // counts once rather than swamping the weekly totals.
+  void recordHistory({
+    domain: classification.domain,
+    entityId: classification.entityId,
+    category: classification.category,
+  });
 
   const summary = getSummary(details.tabId);
   if (summary === null) return;

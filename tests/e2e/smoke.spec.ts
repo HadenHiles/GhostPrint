@@ -29,7 +29,9 @@ test('content script completes a round trip to the service worker', async ({ con
 test('popup completes a round trip to the service worker', async ({ context, extensionId }) => {
   const page = await context.newPage();
   await page.goto(`chrome-extension://${extensionId}/popup/index.html`);
-  await expect(page.locator('#status')).toHaveAttribute('data-ghostprint-ready', /^\d+$/);
+  await page.waitForFunction(() => document.body.dataset.ghostprintLoaded === 'true', undefined, {
+    timeout: 15_000,
+  });
 });
 
 test('options page clears all local data', async ({ context, extensionId, serviceWorker }) => {

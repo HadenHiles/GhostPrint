@@ -18,7 +18,8 @@ ${extra}${TRACKERS}`;
 }
 
 async function open(context: BrowserContext, body = html()): Promise<Page> {
-  await context.route('**/*', (route) =>
+  // Scoped to HTTP: a `**/*` pattern would also intercept chrome-extension:// pages.
+  await context.route(/^https?:\/\//, (route) =>
     route.request().url() === PAGE
       ? route.fulfill({ contentType: 'text/html', body })
       : route.fulfill({ contentType: 'image/gif', body: '' }),

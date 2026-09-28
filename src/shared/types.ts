@@ -82,11 +82,28 @@ export interface TrackerDetail {
   hits: number;
 }
 
+export interface EntityCount {
+  id: string;
+  name: string;
+  count: number;
+}
+
+export interface HistorySummary {
+  /** Size of the rolling window, in days. */
+  days: number;
+  /** Tracker encounters across the window, not distinct domains. */
+  total: number;
+  distinctDomains: number;
+  byCategory: CategoryTotals;
+  topEntities: EntityCount[];
+}
+
 /** Requests initiated by content script / popup / options, answered by the SW. */
 export type Request =
   | { type: 'PING' }
   | { type: 'GET_LEDGER'; tabId?: number }
   | { type: 'GET_DETAILS'; tabId?: number }
+  | { type: 'GET_HISTORY'; days?: number }
   | { type: 'CLEAR_ALL_DATA' };
 
 export type ResponseFor<R extends Request> = R extends { type: 'PING' }
@@ -95,9 +112,11 @@ export type ResponseFor<R extends Request> = R extends { type: 'PING' }
     ? { type: 'LEDGER'; summary: LedgerSummary | null }
     : R extends { type: 'GET_DETAILS' }
       ? { type: 'DETAILS'; trackers: TrackerDetail[] }
-      : R extends { type: 'CLEAR_ALL_DATA' }
-        ? { type: 'CLEARED' }
-        : never;
+      : R extends { type: 'GET_HISTORY' }
+        ? { type: 'HISTORY'; summary: HistorySummary }
+        : R extends { type: 'CLEAR_ALL_DATA' }
+          ? { type: 'CLEARED' }
+          : never;
 
 /** Pushed from the SW to connected ports. */
 export type Push =

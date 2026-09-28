@@ -5,34 +5,246 @@
     <meta charset="utf-8" />
     <title>GhostPrint</title>
     <style>
-        body {
-            margin: 0;
-            width: 320px;
-            font: 13px/1.4 system-ui, sans-serif;
-            background: #0e0e12;
-            color: #e8e8f0;
+        :root {
+            --bg: #12121a;
+            --fg: #e9e9f2;
+            --muted: #9292a8;
+            --line: #2a2a38;
+            --ad: #f0643c;
+            --analytics: #3ca0f0;
+            --behavioral: #b45cf0;
+            --unknown: #5c5c70;
         }
 
-        main {
-            padding: 14px;
+        @media (prefers-color-scheme: light) {
+            :root {
+                --bg: #ffffff;
+                --fg: #16161f;
+                --muted: #61616f;
+                --line: #e2e2ea;
+            }
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 320px;
+            background: var(--bg);
+            color: var(--fg);
+            font: 13px/1.4 system-ui, -apple-system, 'Segoe UI', sans-serif;
+        }
+
+        header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 12px 14px 10px;
+            border-bottom: 1px solid var(--line);
         }
 
         h1 {
-            font-size: 14px;
-            margin: 0 0 8px;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        #site {
+            color: var(--muted);
+            font-size: 11px;
+            margin-left: auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 170px;
+        }
+
+        section {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        h2 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 8px;
+        }
+
+        .headline {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .big {
+            font-size: 26px;
+            font-weight: 680;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .rows {
+            display: grid;
+            gap: 5px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 8px 1fr auto;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .track {
+            height: 5px;
+            border-radius: 3px;
+            background: var(--line);
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            width: 0;
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+            font-size: 11px;
+            color: var(--muted);
+            min-width: 2ch;
+            text-align: right;
+        }
+
+        .c0 {
+            background: var(--ad);
+        }
+
+        .c1 {
+            background: var(--analytics);
+        }
+
+        .c2 {
+            background: var(--behavioral);
+        }
+
+        .c3 {
+            background: var(--unknown);
+        }
+
+        .label {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .entity {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            padding: 3px 0;
+        }
+
+        .entity-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .entity-count {
+            margin-left: auto;
+            font-variant-numeric: tabular-nums;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+        }
+
+        button {
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--muted);
+            font: inherit;
+            font-size: 11px;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            color: var(--fg);
+            border-color: var(--muted);
+        }
+
+        button:focus-visible {
+            outline: 2px solid var(--analytics);
+            outline-offset: 1px;
+        }
+
+        #clear[data-confirming='true'] {
+            color: var(--ad);
+            border-color: var(--ad);
         }
 
         #status {
-            color: #8b8ba3;
+            margin-left: auto;
+            font-size: 11px;
+            color: var(--muted);
         }
     </style>
 </head>
 
 <body>
-    <main>
+    <header>
         <h1>GhostPrint</h1>
-        <p id="status">Connecting…</p>
-    </main>
+        <span id="site"></span>
+    </header>
+
+    <section aria-labelledby="page-heading">
+        <h2 id="page-heading">This page</h2>
+        <div class="headline">
+            <span class="big" id="page-total">&mdash;</span>
+            <span class="label" id="page-label">trackers</span>
+        </div>
+        <div class="rows" id="page-rows"></div>
+        <p class="muted" id="page-note" hidden></p>
+    </section>
+
+    <section aria-labelledby="week-heading">
+        <h2 id="week-heading">Last 7 days</h2>
+        <div class="headline">
+            <span class="big" id="week-total">&mdash;</span>
+            <span class="label" id="week-label">encounters</span>
+        </div>
+        <div id="week-entities"></div>
+    </section>
+
+    <footer>
+        <button id="options" type="button">Settings</button>
+        <button id="clear" type="button">Clear data</button>
+        <span id="status" role="status"></span>
+    </footer>
+
     <script type="module" src="./popup.ts"></script>
 </body>
 

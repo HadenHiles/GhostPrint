@@ -19,10 +19,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 1 — MVP |
-| Active task | `P1-05` (popup session summary) |
+| Active task | `P1-06` (performance benchmark harness) |
 | Last updated | 2026-09-28 |
-| Blockers | `P1-01b` needs a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-05` → `P1-06`, then `P1-01b` before `P1-07` |
+| Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
+| Next up | `P1-06` → `P1-08`, then `P1-01b` before `P1-07` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -30,7 +30,8 @@
 dictionary is high-precision (208 hosts, 69 entities, every one attributed to a verified
 corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
 **`P1-03` complete.** Ledger rehydrates after a CDP-forced service-worker termination.
-**`P1-04` complete.** 121 unit tests, 22 e2e specs, all green across repeated runs.
+**`P1-04` complete.** Closed Shadow DOM counter with corner-collision avoidance.
+**`P1-05` complete.** 141 unit tests, 30 e2e specs, all green across repeated runs.
 
 ---
 
@@ -319,14 +320,28 @@ Two refinements over the original plan:
 
 ---
 
-### `P1-05` Popup: session summary
+### `P1-05` Popup: session summary — **`[x]` done**
 **Deps:** `P1-03`
+
+> **Two bugs found while building this, both invisible without the e2e harness.**
+>
+> 1. **History silently lost records.** Concurrent `record()` calls each awaited a storage
+>    read, received the same base object, and the last write clobbered the others. Weekly
+>    totals would have undercounted forever without ever erroring. Fixed by sharing one
+>    load promise and re-reading the live cache after the await.
+> 2. **The popup could report on itself.** Tab resolution trusted `sender.tab`, but the
+>    popup does occupy a tab when opened directly, so it reported its own (empty) ledger.
+>    Extension-page senders are now resolved to the active *page* tab instead.
+
 **Steps**
 1. Popup shows current-tab breakdown by category, top 5 entities, and a 7-day local rolling total.
 2. Local history store: per-day aggregate counts only (`{ date, domain, entityId, category, count }`), capped at 90 days, pruned by a daily `chrome.alarms` job.
 3. "Clear all data" button that wipes `chrome.storage.local` + `session` and resets state.
 
-**Done when:** popup opens in < 100 ms with accurate counts, and "Clear all data" verifiably empties storage (asserted in an e2e test).
+**Done when:** popup opens in < 100 ms with accurate counts, and "Clear all data" verifiably empties storage (asserted in an e2e test). ✅ First contentful paint is asserted < 100 ms: the shell is static markup and data fills in afterwards, so paint never waits on a service-worker round trip. Clear-data asserts history, ledgers, and muted origins are all empty and defaults restored.
+
+> Clearing is two-step (click, then confirm) so a stray click cannot destroy 90 days of
+> local history. Not in the original plan; added because the action is irreversible.
 
 ---
 
@@ -586,6 +601,7 @@ Opt-in rate ≥ 15% · two signed B2B trials · zero regulatory complaints · ex
 
 | Risk | Impact | Mitigation | Owner task |
 |---|---|---|---|
+| Async read-modify-write on shared caches | Silent undercounting, no error surfaced | Share one load promise; re-read live state after every await | `P1-05` |
 | Widget covers a checkout CTA | Lost sales on host sites, uninstalls | Relocate away from any fixed/sticky corner element; e2e click-through test | `P1-04` |
 | Curated tracker datasets are NonCommercial | Blocks Phase 3; forces a late rebuild | Use EasyPrivacy (CC BY-SA 3.0) + self-authored entity map | `P1-01`, ADR-002 |
 | eTLD+1 keying misclassifies shared CDNs | Precision collapse, user distrust | Hostname-keyed dictionary + regression test on CDN apexes | `P1-01` |

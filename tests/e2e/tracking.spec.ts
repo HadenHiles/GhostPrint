@@ -13,7 +13,8 @@ const HTML = `<!doctype html><meta charset="utf-8"><title>shop</title>
 
 /** Fulfils the page and every third-party asset it references, with no real network. */
 async function stubNetwork(context: BrowserContext): Promise<void> {
-  await context.route('**/*', (route) => {
+  // Scoped to HTTP: a `**/*` pattern would also intercept chrome-extension:// pages.
+  await context.route(/^https?:\/\//, (route) => {
     const url = route.request().url();
     if (url.startsWith(PAGE) && !url.includes('.png')) {
       return route.fulfill({ contentType: 'text/html', body: HTML });

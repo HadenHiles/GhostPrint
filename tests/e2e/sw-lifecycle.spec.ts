@@ -18,7 +18,8 @@ test('a revived service worker rehydrates the ledger with no data loss', async (
   context,
   extensionPage,
 }) => {
-  await context.route('**/*', (route) =>
+  // Scoped to HTTP: a `**/*` pattern would also intercept chrome-extension:// pages.
+  await context.route(/^https?:\/\//, (route) =>
     route.request().url() === PAGE
       ? route.fulfill({ contentType: 'text/html', body: HTML })
       : route.fulfill({ contentType: 'image/gif', body: '' }),
