@@ -22,7 +22,7 @@
 | Active task | `P1-06` (performance benchmark harness) |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-06` live run → `P1-01b` → `P1-07` |
+| Next up | `P1-01b` live crawl → `P1-07` live corpus → Phase 1 exit gate |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -36,6 +36,8 @@ corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
 egress audit are committed and green.
 **`P1-06` harness complete.** Offline fixture mode passes locally; the live 50-site
 threshold remains pending on the network-enabled performance workflow.
+**`P1-07` evaluator complete.** Offline replay and reporting work against synthetic
+fixtures; the representative 15-site e-commerce corpus remains pending on `P1-01b`.
 
 ---
 
@@ -372,7 +374,7 @@ environment's Chromium returns `ERR_NAME_NOT_RESOLVED` for public sites.
 
 ---
 
-### `P1-07` Detection accuracy harness
+### `P1-07` Detection accuracy harness — **`[~] evaluator done; representative corpus pending`**
 **Deps:** `P1-03`
 **Original success criterion:** *≥ 85% of third-party tracking scripts on major e-commerce sites*
 
@@ -381,7 +383,21 @@ environment's Chromium returns `ERR_NAME_NOT_RESOLVED` for public sites.
 2. Write a replay test that feeds the HAR through the classifier offline (no live network) and computes recall, precision, and per-category confusion.
 3. Report recall against the labeled tracker set.
 
-**Done when:** recall ≥ 85% and precision ≥ 95% (false positives are worse than misses for user trust) across the corpus, reproducibly, offline.
+**Implementation:** [src/shared/accuracy.ts](src/shared/accuracy.ts) owns the typed
+precision/recall/confusion calculations. Three synthetic regression fixtures under
+[tests/fixtures/ground-truth](tests/fixtures/ground-truth) exercise Shopify,
+WooCommerce, and BigCommerce-shaped requests. `npm run accuracy` emits ignored
+`accuracy-results.json` and `accuracy-results.md` reports. The evaluator measures
+known-dictionary attribution; unknown third parties remain visible to the runtime ledger
+but are dictionary misses for recall.
+
+**Current offline result:** 15 requests, 100% precision, 85.71% recall. This validates
+the evaluator and regression cases only; it is not representative evidence for the live
+success criterion.
+
+**Done when:** recall ≥ 85% and precision ≥ 95% (false positives are worse than misses
+for user trust) across the representative corpus, reproducibly, offline. ✅ evaluator;
+⏳ corpus and final gate pending `P1-01b`.
 
 ---
 

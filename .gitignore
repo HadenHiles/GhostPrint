@@ -7,4 +7,6 @@ test-results/
 playwright-report/
 bench-results.json
 bench-results.md
+accuracy-results.json
+accuracy-results.md
 .cache/
