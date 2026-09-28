@@ -21,25 +21,26 @@
 | Phase | Phase 1 — MVP |
 | Active task | Phase 1 validation handoff |
 | Last updated | 2026-09-28 |
-| Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | Run `.github/workflows/phase1-validation.yml` on a network-enabled runner |
+| Blockers | Live performance threshold failed; representative corpus still needs manual labels |
+| Next up | Review live benchmark regressions → label 15 e-commerce crawl fixtures |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
 [docs/ADR-002-tracker-data-source.md](docs/ADR-002-tracker-data-source.md). The shipped
-dictionary is high-precision (208 hosts, 69 entities, every one attributed to a verified
-corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
+dictionary is now 477 hostname entries (69 entities, 213 intentionally unattributed
+Unknown entries) and remains within the bundle budget. Recall depends on the labeled
+corpus.
 **`P1-03` complete.** Ledger rehydrates after a CDP-forced service-worker termination.
 **`P1-04` complete.** Closed Shadow DOM counter with corner-collision avoidance.
 **`P1-05` complete.** 141 unit tests, 30 e2e specs, all green across repeated runs.
 **`P1-08` complete.** Privacy policy, threat model, source/manifest audit, and bundled
 egress audit are committed and green.
-**`P1-06` harness complete.** Offline fixture mode passes locally; the live 50-site
-threshold remains pending on the network-enabled performance workflow.
+**`P1-06` measured.** 47/50 sites completed; 29 exceeded the 5% per-site threshold,
+three navigation failures occurred, and the worst measured degradation was 259.44%.
 **`P1-07` evaluator complete.** Offline replay and reporting work against synthetic
 fixtures; the representative 15-site e-commerce corpus remains pending on `P1-01b`.
-**Phase 1 implementation complete.** Remaining work is evidence collection on a
-network-enabled runner, followed by manual labeling of crawl candidates.
+**Phase 1 implementation complete.** Live evidence is collected; performance remediation
+and manual labeling remain before the exit gate can pass.
 
 ---
 
@@ -177,8 +178,10 @@ CI workflow committed, `dist/` loads unpacked with zero console errors.
 >    domain classified all of CloudFront and AWS as trackers. The artifact is keyed by
 >    **hostname**, matched by walking suffixes. A regression test guards this.
 >
-> **Delivered:** 208 hosts / 69 entities / 11.5 KB, 100% attributed to a verified
-> corporate parent. **Not delivered:** broad recall and prevalence ranking — see `P1-01b`.
+> **Initial delivery:** 208 hosts / 69 entities / 11.5 KB, 100% attributed to a verified
+> corporate parent. **Current artifact:** 477 hosts / 69 entities / 20.1 KB after the
+> live prevalence intersection; 213 entries intentionally have no corporate parent.
+> Unknown attribution is preferable to guessing and is surfaced as Unidentified.
 
 **Design**
 - Source of truth: DuckDuckGo Tracker Radar (`duckduckgo/tracker-radar`, permissive license — verify and record in `docs/LICENSES.md`). Optionally cross-reference Disconnect's `services.json` for categories.
@@ -213,11 +216,12 @@ CI workflow committed, `dist/` loads unpacked with zero console errors.
 
 ---
 
-### `P1-01b` Crawl-derived prevalence & recall expansion — **`[~]` runner ready; live crawl pending**
+### `P1-01b` Crawl-derived prevalence & recall expansion — **`[~]` crawl complete; target pending**
 **Deps:** `P1-04`
-**Blocker:** needs a machine where headless Chromium has network access. Verified
-unavailable in the current environment (`curl` works, Chromium returns
-`ERR_NAME_NOT_RESOLVED`), so this cannot be completed here.
+**Measured run:** 1,000 URLs requested, 628 completed, and 372 failed due to unreachable,
+non-web, or navigation-error domains. The run produced 1,491 unique third-party hosts;
+269 EasyPrivacy-matching hosts were observed and added to the artifact, for 477 total
+dictionary hosts. The ≥500-host target was not met.
 
 **Why it exists:** EasyPrivacy yields ~47k tracker host patterns (~977 KB) with no
 prevalence signal. Ranking by filter-rule count was tried and rejected — it surfaced
@@ -231,8 +235,9 @@ measures list-maintenance effort, not tracker reach. Real prevalence requires ob
 3. Compute prevalence = (sites where host appears) / (sites crawled). This is a measured
    figure we own outright, with no upstream licence attached.
 4. Rank EasyPrivacy hosts by measured prevalence; take the top N that fits the size budget.
-5. Persist the raw crawl as the `P1-07` ground-truth corpus — the same run feeds both tasks.
-6. Replace `rank` with `prevalence` in the artifact and update the dictionary tests.
+5. Persist the raw crawl as candidate evidence; do not treat it as labeled ground truth.
+6. Retry failed domains or expand the frontier until ≥500 matching hosts are observed,
+   then replace the seed-only artifact with the prevalence-ranked artifact.
 
 **Implementation:** [tools/crawl-prevalence.mjs](tools/crawl-prevalence.mjs) accepts a
 JSON URL list (`--urls-file`), crawls up to 1,000 sites with the built extension, records
@@ -243,7 +248,8 @@ capture is intentionally separate from the hand-labeled P1-07 corpus: crawl outp
 candidate evidence until a reviewer labels tracker/non-tracker and category fields.
 
 **Done when:** `trackers.json` covers ≥ 500 hosts ranked by measured prevalence, stays
-≤ 120 KB, and `P1-07` recall ≥ 85%.
+≤ 120 KB, and `P1-07` recall ≥ 85%. ⏳ 477 hosts currently observed; crawl retry and
+representative labeling remain.
 
 ---
 
@@ -361,7 +367,7 @@ Two refinements over the original plan:
 
 ---
 
-### `P1-06` Performance benchmark harness — **`[~] harness done; live gate pending`**
+### `P1-06` Performance benchmark harness — **`[!]` measured gate failed**
 **Deps:** `P1-04`
 **Original success criterion:** *Page load ≤ 5% degradation on top 50 domains*
 
@@ -378,13 +384,17 @@ is used by the scheduled/manual [performance workflow](.github/workflows/perform
 The runner prefers LCP, falls back to FCP or load timing when headless Chromium omits an
 LCP entry, and records the run rather than silently inventing a value.
 
+**Measured result:** 47/50 sites completed; 29 exceeded the 5% per-site limit, three
+navigation failures occurred, and the worst measured degradation was 259.44%. Aggregate
+load-event degradation was -9.89%, but the per-site gate fails. This is a product
+performance failure to remediate, not an environment blocker.
+
 **Done when:** the harness runs end-to-end unattended and the current build passes the ≤ 5%
-/ ≤ 2% thresholds. ✅ harness execution; ⏳ live top-50 threshold pending because this
-environment's Chromium returns `ERR_NAME_NOT_RESOLVED` for public sites.
+/ ≤ 2% thresholds. ✅ harness execution; ❌ current live performance result.
 
 ---
 
-### `P1-07` Detection accuracy harness — **`[~] evaluator done; representative corpus pending`**
+### `P1-07` Detection accuracy harness — **`[~] evaluator done; live corpus pending`**
 **Deps:** `P1-03`
 **Original success criterion:** *≥ 85% of third-party tracking scripts on major e-commerce sites*
 
@@ -403,7 +413,8 @@ but are dictionary misses for recall.
 
 **Current offline result:** 15 requests, 100% precision, 85.71% recall. This validates
 the evaluator and regression cases only; it is not representative evidence for the live
-success criterion.
+success criterion. The 628 completed crawl sites are candidate evidence only; they still
+need tracker/non-tracker and category labels before entering this evaluator.
 
 **Done when:** recall ≥ 85% and precision ≥ 95% (false positives are worse than misses
 for user trust) across the representative corpus, reproducibly, offline. ✅ evaluator;

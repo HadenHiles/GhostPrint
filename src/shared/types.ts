@@ -55,7 +55,7 @@ export interface EntityRecord {
 }
 
 /** `[entityId, categoryCode]`, kept as a tuple to keep the artifact small. */
-export type HostRecord = [entityId: string, category: number];
+export type HostRecord = [entityId: string | null, category: number];
 
 export interface TrackerDictionary {
   version: string;

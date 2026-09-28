@@ -12,6 +12,7 @@ const PREVALENCE_OUTPUT = join(ROOT, 'prevalence-results.json');
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_SETTLE_MS = 5_000;
 const DEFAULT_LIMIT = 1_000;
+const DEFAULT_CONCURRENCY = 8;
 
 const args = parseArgs(process.argv.slice(2));
 const urls = readUrls(args.urlsFile ?? DEFAULT_URLS).slice(0, args.limit ?? DEFAULT_LIMIT);
@@ -24,11 +25,8 @@ const context = await chromium.launchPersistentContext('', {
 });
 
 try {
-    for (const [index, url] of urls.entries()) {
-        const result = await crawlSite(context, url, args);
-        results.push(result);
-        console.log(`[${index + 1}/${urls.length}] ${result.url}: ${result.status}, ${result.thirdPartyHosts.length} hosts`);
-    }
+    const crawled = await crawlConcurrently(context, urls, args);
+    results.push(...crawled);
 } finally {
     await context.close();
 }
@@ -55,6 +53,7 @@ function parseArgs(argv) {
     let limit;
     let settleMs = DEFAULT_SETTLE_MS;
     let timeoutMs = DEFAULT_TIMEOUT_MS;
+    let concurrency = DEFAULT_CONCURRENCY;
     for (let index = 0; index < argv.length; index += 1) {
         const argument = argv.at(index);
         const value = argv.at(index + 1);
@@ -62,16 +61,41 @@ function parseArgs(argv) {
         else if (argument === '--limit') limit = Number(value);
         else if (argument === '--settle-ms') settleMs = Number(value);
         else if (argument === '--timeout-ms') timeoutMs = Number(value);
+        else if (argument === '--concurrency') concurrency = Number(value);
         else throw new Error(`Unknown argument: ${argument}`);
         index += 1;
     }
-    return { urlsFile, limit, settleMs, timeoutMs };
+    return { urlsFile, limit, settleMs, timeoutMs, concurrency };
 }
 
 function readUrls(file) {
     const input = JSON.parse(readFileSync(file, 'utf8'));
     if (!Array.isArray(input)) throw new Error(`${file} must contain a JSON array of URLs.`);
-    return input.filter((url) => typeof url === 'string' && /^https?:\/\//.test(url));
+    return input
+        .filter((url) => typeof url === 'string')
+        .map((url) => url.trim())
+        .filter((url) => /^https?:\/\//.test(url));
+}
+
+async function crawlConcurrently(context, urls, options) {
+    const results = new Map();
+    let nextIndex = 0;
+    const workerCount = Math.max(1, Math.min(options.concurrency, urls.length));
+
+    async function worker() {
+        while (nextIndex < urls.length) {
+            const index = nextIndex;
+            nextIndex += 1;
+            const url = urls.at(index);
+            if (url === undefined) continue;
+            const result = await crawlSite(context, url, options);
+            results.set(index, result);
+            console.log(`[${index + 1}/${urls.length}] ${result.url}: ${result.status}, ${result.thirdPartyHosts.length} hosts`);
+        }
+    }
+
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    return urls.map((_, index) => results.get(index));
 }
 
 async function crawlSite(context, url, options) {

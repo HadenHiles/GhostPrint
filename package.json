@@ -20,7 +20,8 @@
     "accuracy": "node tools/accuracy-report.mjs",
     "crawl:prevalence": "node tools/crawl-prevalence.mjs",
     "update-trackers": "node tools/build-tracker-db.mjs --refresh",
-    "build-tracker-db": "node tools/build-tracker-db.mjs"
+    "build-tracker-db": "node tools/build-tracker-db.mjs",
+    "build-tracker-db:prevalence": "node tools/build-tracker-db.mjs --prevalence-file=prevalence-results.json"
   },
   "repository": {
     "type": "git",

@@ -56,7 +56,7 @@ export function classify(requestUrl: string): Classification | null {
   if (match === null) return null;
 
   const [matchedHost, entityId, category] = match;
-  const entity = entities.get(entityId);
+  const entity = entityId === null ? undefined : entities.get(entityId);
 
   return {
     host: matchedHost,
@@ -89,7 +89,7 @@ export function getEntity(entityId: string): EntityRecord | null {
 export const dictionaryVersion = trackerData.version;
 export const dictionarySize = hosts.size;
 
-function lookup(host: string): [string, string, number] | null {
+function lookup(host: string): [string, string | null, number] | null {
   const labels = host.split('.');
 
   // Stop before the final label so a bare TLD is never treated as a candidate.

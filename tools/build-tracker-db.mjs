@@ -11,10 +11,8 @@ import { extractHosts, SOURCE } from './sources/easyprivacy.mjs';
  * (`match.adsrvr.org`, `d2v9ip.cloudfront.net`); collapsing those to the registrable
  * domain would mark all of CloudFront and AWS as trackers. See docs/ADR-002.
  *
- * Scope at MVP: entities with a verified corporate parent, enriched with the specific
- * tracking hosts EasyPrivacy lists underneath them. The broad unattributed tracker set
- * is deferred to P1-01b, which needs crawl-derived prevalence to rank and prune ~47k
- * host patterns down to a bundleable set.
+ * Scope at MVP: verified corporate parents plus crawl-ranked EasyPrivacy hosts. Hosts
+ * without a verified owner remain explicitly unattributed instead of being guessed.
  */
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -22,6 +20,10 @@ const ROOT = new URL('../', import.meta.url);
 const CACHE_FILE = fileURLToPath(new URL('.cache/easyprivacy.txt', ROOT));
 const SEED_FILE = fileURLToPath(new URL('tools/data/entities.seed.json', ROOT));
 const OUT_FILE = fileURLToPath(new URL('src/data/trackers.json', ROOT));
+const PREVALENCE_FILE = process.argv
+    .slice(1)
+    .find((argument) => argument.startsWith('--prevalence-file='))
+    ?.split('=').slice(1).join('=');
 
 const CATEGORY_NAMES = ['advertising', 'analytics', 'behavioral', 'unknown'];
 
@@ -82,13 +84,32 @@ for (const host of listHosts) {
     enriched += 1;
 }
 
-const usedEntityIds = new Set([...hosts.values()].map(([id]) => id));
+let crawlAdded = 0;
+if (PREVALENCE_FILE !== undefined) {
+    const prevalence = JSON.parse(readFileSync(PREVALENCE_FILE, 'utf8'));
+    const rankedHosts = Object.entries(prevalence.hosts ?? {}).sort(
+        ([, a], [, b]) => b.prevalence - a.prevalence,
+    );
+
+    for (const [host] of rankedHosts) {
+        if (hosts.has(host) || !matchesTrackerRule(host, listHosts)) continue;
+        const registrable = getDomain(host, { allowPrivateDomains: false });
+        const owner = registrable === null ? undefined : seed.byDomain.get(registrable);
+        hosts.set(host, [owner?.entityId ?? null, owner?.category ?? 3]);
+        crawlAdded += 1;
+        if (crawlAdded >= 500) break;
+    }
+}
+
+const usedEntityIds = new Set(
+    [...hosts.values()].map(([id]) => id).filter((id) => id !== null),
+);
 const entities = Object.fromEntries(
     [...seed.entities.entries()].filter(([id]) => usedEntityIds.has(id)),
 );
 
 const artifact = {
-    version: `${version}+seed`,
+    version: `${version}+seed${PREVALENCE_FILE === undefined ? '' : '+crawl'}`,
     generatedAt: new Date().toISOString().slice(0, 10),
     sources: [
         SOURCE,
@@ -110,6 +131,15 @@ writeFileSync(OUT_FILE, `${JSON.stringify(artifact)}\n`);
 console.log(`${SOURCE.title} ${version}: ${listHosts.size} host patterns available`);
 console.log(`Seed: ${seed.byDomain.size} domains, ${Object.keys(entities).length} entities`);
 console.log(`Enriched with ${enriched} hosts under seeded domains`);
+if (PREVALENCE_FILE !== undefined) console.log(`Added ${crawlAdded} crawl-ranked tracker hosts`);
 console.log(
     `Wrote ${Object.keys(artifact.hosts).length} hosts, ${(statSync(OUT_FILE).size / 1024).toFixed(1)} KB`,
 );
+
+function matchesTrackerRule(host, trackerHosts) {
+    const labels = host.split('.');
+    for (let index = 0; index < labels.length - 1; index += 1) {
+        if (trackerHosts.has(labels.slice(index).join('.'))) return true;
+    }
+    return false;
+}

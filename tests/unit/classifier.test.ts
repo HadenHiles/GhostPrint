@@ -14,7 +14,9 @@ describe('dictionary artifact', () => {
 
   it('maps every host to a declared entity', () => {
     for (const [host, [entityId]] of Object.entries(trackerData.hosts)) {
-      expect(getEntity(entityId), `${host} -> ${entityId}`).not.toBeNull();
+      if (entityId !== null) {
+        expect(getEntity(entityId), `${host} -> ${entityId}`).not.toBeNull();
+      }
     }
   });
 
@@ -25,7 +27,7 @@ describe('dictionary artifact', () => {
 
   it('uses only valid category codes', () => {
     for (const [, category] of Object.values(trackerData.hosts)) {
-      expect([0, 1, 2]).toContain(category);
+      expect([0, 1, 2, 3]).toContain(category);
     }
   });
 
