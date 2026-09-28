@@ -18,11 +18,15 @@
 
 | Field | Value |
 |---|---|
-| Phase | Phase 0 — Foundations |
-| Active task | `P0-01` |
+| Phase | Phase 1 — MVP |
+| Active task | `P1-01` (tracker dictionary build pipeline) |
 | Last updated | 2026-09-28 |
 | Blockers | None |
-| Next up | `P0-01` → `P0-02` → `P0-03` |
+| Next up | `P1-01` → `P1-02` → `P1-03` |
+
+**Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives are in place and
+verified: `npm run typecheck`, `lint`, `test` (86 unit tests), `build`, `check:egress`,
+and `test:e2e` (4 specs, real extension loaded into Chromium) all pass.
 
 ---
 
@@ -79,8 +83,10 @@ ghostprint/
 
 *Not in the original roadmap but required; without this the MVP tasks have nowhere to land.*
 
-### `P0-01` Repository & toolchain bootstrap
+### `P0-01` Repository & toolchain bootstrap — **`[x]` done**
 **Deps:** none
+**Outcome:** plain Vite, two build passes, no extension plugin. See
+[docs/ADR-001-build-tooling.md](docs/ADR-001-build-tooling.md).
 **Steps**
 1. `npm init`; add TypeScript 5.x, Vite + `@crxjs/vite-plugin` (or `wxt` — pick one and record the decision in `docs/ADR-001-build-tooling.md`).
 2. Configure `tsconfig.json` with `strict: true`, `noUncheckedIndexedAccess: true`, path alias `@/* → src/*`.
@@ -93,8 +99,11 @@ ghostprint/
 
 ---
 
-### `P0-02` Manifest V3 skeleton
+### `P0-02` Manifest V3 skeleton — **`[x]` done**
 **Deps:** `P0-01`
+**Outcome:** permission justifications written up front in
+[docs/PERMISSIONS.md](docs/PERMISSIONS.md). Round trip verified by
+[tests/e2e/smoke.spec.ts](tests/e2e/smoke.spec.ts).
 **Steps**
 1. Author `manifest.json` (v3) with:
    - `"permissions": ["storage", "tabs", "webRequest", "declarativeNetRequest", "declarativeNetRequestFeedback", "alarms"]`
@@ -110,14 +119,28 @@ ghostprint/
 
 ---
 
-### `P0-03` Domain parsing primitives
+### `P0-03` Domain parsing primitives — **`[x]` done**
 **Deps:** `P0-01`
+**Outcome:** [src/shared/domain.ts](src/shared/domain.ts), 86 cases in
+[tests/unit/domain.test.ts](tests/unit/domain.test.ts). Two-function split:
+`getRegistrableDomain` uses ICANN-only suffixes (matches the tracker dictionary's keying),
+while `isThirdParty` uses private suffixes so sibling `*.github.io` sites are correctly
+treated as separate parties.
 **Steps**
 1. Bundle the Public Suffix List (use `tldts` — small, no network, tree-shakeable).
 2. Implement `getRegistrableDomain(url)` and `isThirdParty(requestUrl, pageUrl)` in `shared/domain.ts`.
 3. Handle edge cases explicitly: `about:`, `chrome-extension:`, `data:`, `blob:`, IP literals, localhost, punycode/IDN, and multi-part suffixes (`co.uk`, `s3.amazonaws.com`).
 
 **Done when:** a unit-test table of ≥ 60 cases (including all edge cases above) passes at 100%.
+
+---
+
+### ✅ Phase 0 exit gate — **passed**
+`npm run typecheck && npm run lint && npm test && npm run build && npm run check:egress && npm run test:e2e` green,
+CI workflow committed, `dist/` loads unpacked with zero console errors.
+
+> **Note:** the zero-egress CI guard (`tools/check-egress.mjs`, roadmap step `P1-08.1`) was
+> pulled forward into Phase 0 — it is cheapest to enforce before any networking code exists.
 
 ---
 

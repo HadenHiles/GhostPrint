@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>GhostPrint — Settings</title>
+    <style>
+        body {
+            margin: 0;
+            font: 14px/1.5 system-ui, sans-serif;
+            background: #0e0e12;
+            color: #e8e8f0;
+        }
+
+        main {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 32px 20px;
+        }
+
+        label {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 12px 0;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 8px 14px;
+            border: 1px solid #3a3a4a;
+            border-radius: 6px;
+            background: #1a1a22;
+            color: inherit;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <h1>GhostPrint settings</h1>
+        <label><input type="checkbox" id="enabled" /> Enable tracking detection</label>
+        <label><input type="checkbox" id="showCounter" /> Show the Ghost Counter on pages</label>
+        <button id="clear" type="button">Clear all local data</button>
+        <p id="cleared" hidden>Cleared.</p>
+    </main>
+    <script type="module" src="./options.ts"></script>
+</body>
+
+</html>

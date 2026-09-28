@@ -1,0 +1,47 @@
+{
+  "name": "ghostprint",
+  "version": "0.0.1",
+  "description": "See who is watching you watch the web.",
+  "main": "index.js",
+  "scripts": {
+    "test": "vitest run",
+    "build": "vite build && vite build --config vite.content.config.ts",
+    "dev": "vite build --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check:egress": "node tools/check-egress.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HadenHiles/GhostPrint.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/HadenHiles/GhostPrint/issues"
+  },
+  "homepage": "https://github.com/HadenHiles/GhostPrint#readme",
+  "private": "true",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
+    "@types/chrome": "^0.3.1",
+    "@types/node": "^26.6.3",
+    "eslint": "^10.11.0",
+    "eslint-plugin-security": "^4.1.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.9",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.0",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "tldts": "^7.4.16"
+  }
+}
