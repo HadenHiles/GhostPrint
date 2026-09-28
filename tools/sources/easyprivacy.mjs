@@ -5,11 +5,11 @@ import { getDomain } from 'tldts';
  * license (the other half is GPL-3.0-or-later). See docs/ADR-002.
  */
 export const SOURCE = {
-  id: 'easyprivacy',
-  title: 'EasyPrivacy',
-  url: 'https://easylist.to/easylist/easyprivacy.txt',
-  license: 'CC BY-SA 3.0',
-  attribution: 'The EasyList authors (https://easylist.to/)',
+    id: 'easyprivacy',
+    title: 'EasyPrivacy',
+    url: 'https://easylist.to/easylist/easyprivacy.txt',
+    license: 'CC BY-SA 3.0',
+    attribution: 'The EasyList authors (https://easylist.to/)',
 };
 
 /** Domain-anchored pattern with no path component: `||host^` or `||host`. */
@@ -29,32 +29,32 @@ const HOST_ONLY = /^[a-z0-9.-]+\^?$/i;
  * is a tracker host, `cloudfront.net` is not.
  */
 export function extractHosts(listText) {
-  const hosts = new Set();
+    const hosts = new Set();
 
-  for (const rawLine of listText.split('\n')) {
-    const line = rawLine.trim();
-    if (line.length === 0 || line.startsWith('!') || line.startsWith('[')) continue;
-    if (line.startsWith('@@')) continue;
-    if (line.includes('##') || line.includes('#@#') || line.includes('#?#')) continue;
-    if (!line.startsWith('||')) continue;
+    for (const rawLine of listText.split('\n')) {
+        const line = rawLine.trim();
+        if (line.length === 0 || line.startsWith('!') || line.startsWith('[')) continue;
+        if (line.startsWith('@@')) continue;
+        if (line.includes('##') || line.includes('#@#') || line.includes('#?#')) continue;
+        if (!line.startsWith('||')) continue;
 
-    const body = line.slice(2);
-    const dollar = body.indexOf('$');
-    const pattern = dollar === -1 ? body : body.slice(0, dollar);
-    const options = dollar === -1 ? '' : body.slice(dollar + 1);
+        const body = line.slice(2);
+        const dollar = body.indexOf('$');
+        const pattern = dollar === -1 ? body : body.slice(0, dollar);
+        const options = dollar === -1 ? '' : body.slice(dollar + 1);
 
-    if (/(^|,)~?domain=/.test(options)) continue;
-    if (!HOST_ONLY.test(pattern)) continue;
+        if (/(^|,)~?domain=/.test(options)) continue;
+        if (!HOST_ONLY.test(pattern)) continue;
 
-    const host = pattern.replace(/\^$/, '').toLowerCase();
-    if (getDomain(host, { allowPrivateDomains: false }) === null) continue;
-    hosts.add(host);
-  }
+        const host = pattern.replace(/\^$/, '').toLowerCase();
+        if (getDomain(host, { allowPrivateDomains: false }) === null) continue;
+        hosts.add(host);
+    }
 
-  return { hosts, version: extractVersion(listText) };
+    return { hosts, version: extractVersion(listText) };
 }
 
 function extractVersion(listText) {
-  const match = /^!\s*Version:\s*(\S+)/m.exec(listText);
-  return match === null ? 'unknown' : match[1];
+    const match = /^!\s*Version:\s*(\S+)/m.exec(listText);
+    return match === null ? 'unknown' : match[1];
 }

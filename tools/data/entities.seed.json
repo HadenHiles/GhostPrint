@@ -1,605 +1,605 @@
 {
-  "$comment": "Self-authored corporate-parent and category map. Not derived from any third-party dataset; see docs/ADR-002-tracker-data-source.md. Category codes: 0=Advertising/Profiling, 1=Site Analytics, 2=Hidden Behavioral Tracking. Only add a domain when its corporate owner is verifiable from public disclosure; unmapped domains are reported as Unknown rather than guessed.",
-  "entities": [
-    {
-      "id": "google",
-      "name": "Google LLC",
-      "displayName": "Google",
-      "domains": {
-        "doubleclick.net": 0,
-        "googlesyndication.com": 0,
-        "googleadservices.com": 0,
-        "googletagservices.com": 0,
-        "2mdn.net": 0,
-        "admob.com": 0,
-        "google-analytics.com": 1,
-        "googletagmanager.com": 1
-      }
-    },
-    {
-      "id": "meta",
-      "name": "Meta Platforms, Inc.",
-      "displayName": "Meta",
-      "domains": {
-        "facebook.net": 0,
-        "facebook.com": 0
-      }
-    },
-    {
-      "id": "microsoft",
-      "name": "Microsoft Corporation",
-      "displayName": "Microsoft",
-      "domains": {
-        "bing.com": 0,
-        "linkedin.com": 0,
-        "adnxs.com": 0,
-        "clarity.ms": 2
-      }
-    },
-    {
-      "id": "amazon",
-      "name": "Amazon.com, Inc.",
-      "displayName": "Amazon",
-      "domains": {
-        "amazon-adsystem.com": 0,
-        "assoc-amazon.com": 0
-      }
-    },
-    {
-      "id": "adobe",
-      "name": "Adobe Inc.",
-      "displayName": "Adobe",
-      "domains": {
-        "demdex.net": 0,
-        "everesttech.net": 0,
-        "omtrdc.net": 1,
-        "2o7.net": 1,
-        "adobedtm.com": 1
-      }
-    },
-    {
-      "id": "oracle",
-      "name": "Oracle Corporation",
-      "displayName": "Oracle",
-      "domains": {
-        "bluekai.com": 0,
-        "addthis.com": 0,
-        "moatads.com": 0,
-        "eloqua.com": 0,
-        "en25.com": 0
-      }
-    },
-    {
-      "id": "salesforce",
-      "name": "Salesforce, Inc.",
-      "displayName": "Salesforce",
-      "domains": {
-        "krxd.net": 0,
-        "pardot.com": 0,
-        "exacttarget.com": 0
-      }
-    },
-    {
-      "id": "bytedance",
-      "name": "ByteDance Ltd.",
-      "displayName": "TikTok",
-      "domains": {
-        "tiktok.com": 0
-      }
-    },
-    {
-      "id": "x-corp",
-      "name": "X Corp.",
-      "displayName": "X (Twitter)",
-      "domains": {
-        "twitter.com": 0,
-        "ads-twitter.com": 0,
-        "t.co": 0
-      }
-    },
-    {
-      "id": "snap",
-      "name": "Snap Inc.",
-      "displayName": "Snap",
-      "domains": {
-        "snapchat.com": 0,
-        "sc-static.net": 0
-      }
-    },
-    {
-      "id": "pinterest",
-      "name": "Pinterest, Inc.",
-      "displayName": "Pinterest",
-      "domains": {
-        "pinterest.com": 0
-      }
-    },
-    {
-      "id": "reddit",
-      "name": "Reddit, Inc.",
-      "displayName": "Reddit",
-      "domains": {
-        "redditstatic.com": 0
-      }
-    },
-    {
-      "id": "criteo",
-      "name": "Criteo S.A.",
-      "displayName": "Criteo",
-      "domains": {
-        "criteo.com": 0,
-        "criteo.net": 0
-      }
-    },
-    {
-      "id": "trade-desk",
-      "name": "The Trade Desk, Inc.",
-      "displayName": "The Trade Desk",
-      "domains": {
-        "adsrvr.org": 0
-      }
-    },
-    {
-      "id": "taboola",
-      "name": "Taboola.com Ltd.",
-      "displayName": "Taboola",
-      "domains": {
-        "taboola.com": 0
-      }
-    },
-    {
-      "id": "outbrain",
-      "name": "Outbrain Inc.",
-      "displayName": "Outbrain",
-      "domains": {
-        "outbrain.com": 0
-      }
-    },
-    {
-      "id": "teads",
-      "name": "Teads",
-      "displayName": "Teads",
-      "domains": {
-        "teads.tv": 0
-      }
-    },
-    {
-      "id": "pubmatic",
-      "name": "PubMatic, Inc.",
-      "displayName": "PubMatic",
-      "domains": {
-        "pubmatic.com": 0
-      }
-    },
-    {
-      "id": "magnite",
-      "name": "Magnite, Inc.",
-      "displayName": "Magnite",
-      "domains": {
-        "rubiconproject.com": 0,
-        "magnite.com": 0
-      }
-    },
-    {
-      "id": "index-exchange",
-      "name": "Index Exchange, Inc.",
-      "displayName": "Index Exchange",
-      "domains": {
-        "casalemedia.com": 0,
-        "indexexchange.com": 0
-      }
-    },
-    {
-      "id": "openx",
-      "name": "OpenX Technologies, Inc.",
-      "displayName": "OpenX",
-      "domains": {
-        "openx.net": 0
-      }
-    },
-    {
-      "id": "equativ",
-      "name": "Equativ (formerly Smart AdServer)",
-      "displayName": "Equativ",
-      "domains": {
-        "smartadserver.com": 0
-      }
-    },
-    {
-      "id": "adform",
-      "name": "Adform A/S",
-      "displayName": "Adform",
-      "domains": {
-        "adform.net": 0
-      }
-    },
-    {
-      "id": "sovrn",
-      "name": "Sovrn Holdings, Inc.",
-      "displayName": "Sovrn",
-      "domains": {
-        "lijit.com": 0
-      }
-    },
-    {
-      "id": "sharethrough",
-      "name": "Sharethrough, Inc.",
-      "displayName": "Sharethrough",
-      "domains": {
-        "sharethrough.com": 0
-      }
-    },
-    {
-      "id": "media-net",
-      "name": "Media.net Advertising FZ-LLC",
-      "displayName": "Media.net",
-      "domains": {
-        "media.net": 0
-      }
-    },
-    {
-      "id": "liveramp",
-      "name": "LiveRamp Holdings, Inc.",
-      "displayName": "LiveRamp",
-      "domains": {
-        "rlcdn.com": 0,
-        "liveramp.com": 0,
-        "pippio.com": 0
-      }
-    },
-    {
-      "id": "transunion",
-      "name": "TransUnion (Neustar)",
-      "displayName": "TransUnion",
-      "domains": {
-        "agkn.com": 0
-      }
-    },
-    {
-      "id": "experian",
-      "name": "Experian plc (Tapad)",
-      "displayName": "Experian",
-      "domains": {
-        "tapad.com": 0
-      }
-    },
-    {
-      "id": "lotame",
-      "name": "Lotame Solutions, Inc.",
-      "displayName": "Lotame",
-      "domains": {
-        "crwdcntrl.net": 0
-      }
-    },
-    {
-      "id": "id5",
-      "name": "ID5 Technology Ltd.",
-      "displayName": "ID5",
-      "domains": {
-        "id5-sync.com": 0
-      }
-    },
-    {
-      "id": "permutive",
-      "name": "Permutive, Inc.",
-      "displayName": "Permutive",
-      "domains": {
-        "permutive.com": 0
-      }
-    },
-    {
-      "id": "bombora",
-      "name": "Bombora, Inc.",
-      "displayName": "Bombora",
-      "domains": {
-        "ml314.com": 0
-      }
-    },
-    {
-      "id": "quantcast",
-      "name": "Quantcast Corporation",
-      "displayName": "Quantcast",
-      "domains": {
-        "quantserve.com": 0,
-        "quantcast.com": 0
-      }
-    },
-    {
-      "id": "comscore",
-      "name": "Comscore, Inc.",
-      "displayName": "Comscore",
-      "domains": {
-        "scorecardresearch.com": 1
-      }
-    },
-    {
-      "id": "nielsen",
-      "name": "The Nielsen Company",
-      "displayName": "Nielsen",
-      "domains": {
-        "imrworldwide.com": 1,
-        "nielsen.com": 1
-      }
-    },
-    {
-      "id": "chartbeat",
-      "name": "Chartbeat, Inc.",
-      "displayName": "Chartbeat",
-      "domains": {
-        "chartbeat.com": 1,
-        "chartbeat.net": 1
-      }
-    },
-    {
-      "id": "contentsquare",
-      "name": "Contentsquare SAS",
-      "displayName": "Contentsquare",
-      "domains": {
-        "contentsquare.net": 2,
-        "hotjar.com": 2,
-        "hotjar.io": 2,
-        "clicktale.net": 2,
-        "heap.io": 1,
-        "heapanalytics.com": 1
-      }
-    },
-    {
-      "id": "fullstory",
-      "name": "FullStory, Inc.",
-      "displayName": "FullStory",
-      "domains": {
-        "fullstory.com": 2
-      }
-    },
-    {
-      "id": "logrocket",
-      "name": "LogRocket, Inc.",
-      "displayName": "LogRocket",
-      "domains": {
-        "logrocket.com": 2,
-        "lr-ingest.io": 2
-      }
-    },
-    {
-      "id": "mouseflow",
-      "name": "Mouseflow, Inc.",
-      "displayName": "Mouseflow",
-      "domains": {
-        "mouseflow.com": 2
-      }
-    },
-    {
-      "id": "inspectlet",
-      "name": "Inspectlet",
-      "displayName": "Inspectlet",
-      "domains": {
-        "inspectlet.com": 2
-      }
-    },
-    {
-      "id": "smartlook",
-      "name": "Smartlook.com, s.r.o.",
-      "displayName": "Smartlook",
-      "domains": {
-        "smartlook.com": 2
-      }
-    },
-    {
-      "id": "glassbox",
-      "name": "Glassbox Ltd.",
-      "displayName": "Glassbox",
-      "domains": {
-        "glassboxdigital.io": 2,
-        "sessioncam.com": 2
-      }
-    },
-    {
-      "id": "quantum-metric",
-      "name": "Quantum Metric, Inc.",
-      "displayName": "Quantum Metric",
-      "domains": {
-        "quantummetric.com": 2
-      }
-    },
-    {
-      "id": "crazy-egg",
-      "name": "Crazy Egg, Inc.",
-      "displayName": "Crazy Egg",
-      "domains": {
-        "crazyegg.com": 2
-      }
-    },
-    {
-      "id": "lucky-orange",
-      "name": "Lucky Orange LLC",
-      "displayName": "Lucky Orange",
-      "domains": {
-        "luckyorange.com": 2
-      }
-    },
-    {
-      "id": "amplitude",
-      "name": "Amplitude, Inc.",
-      "displayName": "Amplitude",
-      "domains": {
-        "amplitude.com": 1
-      }
-    },
-    {
-      "id": "mixpanel",
-      "name": "Mixpanel, Inc.",
-      "displayName": "Mixpanel",
-      "domains": {
-        "mixpanel.com": 1
-      }
-    },
-    {
-      "id": "twilio",
-      "name": "Twilio Inc.",
-      "displayName": "Twilio (Segment)",
-      "domains": {
-        "segment.com": 1,
-        "segment.io": 1
-      }
-    },
-    {
-      "id": "braze",
-      "name": "Braze, Inc.",
-      "displayName": "Braze",
-      "domains": {
-        "braze.com": 0,
-        "appboy.com": 0
-      }
-    },
-    {
-      "id": "klaviyo",
-      "name": "Klaviyo, Inc.",
-      "displayName": "Klaviyo",
-      "domains": {
-        "klaviyo.com": 0
-      }
-    },
-    {
-      "id": "hubspot",
-      "name": "HubSpot, Inc.",
-      "displayName": "HubSpot",
-      "domains": {
-        "hubspot.com": 1,
-        "hs-analytics.net": 1,
-        "hsforms.com": 1
-      }
-    },
-    {
-      "id": "optimizely",
-      "name": "Optimizely, Inc.",
-      "displayName": "Optimizely",
-      "domains": {
-        "optimizely.com": 1
-      }
-    },
-    {
-      "id": "wingify",
-      "name": "Wingify Software Pvt. Ltd.",
-      "displayName": "VWO",
-      "domains": {
-        "visualwebsiteoptimizer.com": 1
-      }
-    },
-    {
-      "id": "new-relic",
-      "name": "New Relic, Inc.",
-      "displayName": "New Relic",
-      "domains": {
-        "newrelic.com": 1,
-        "nr-data.net": 1
-      }
-    },
-    {
-      "id": "datadog",
-      "name": "Datadog, Inc.",
-      "displayName": "Datadog",
-      "domains": {
-        "datadoghq.com": 1
-      }
-    },
-    {
-      "id": "cloudflare",
-      "name": "Cloudflare, Inc.",
-      "displayName": "Cloudflare",
-      "domains": {
-        "cloudflareinsights.com": 1
-      }
-    },
-    {
-      "id": "matomo",
-      "name": "InnoCraft Ltd. (Matomo)",
-      "displayName": "Matomo",
-      "domains": {
-        "matomo.cloud": 1
-      }
-    },
-    {
-      "id": "plausible",
-      "name": "Plausible Insights OÜ",
-      "displayName": "Plausible",
-      "domains": {
-        "plausible.io": 1
-      }
-    },
-    {
-      "id": "fathom",
-      "name": "Conva Ventures Inc. (Fathom Analytics)",
-      "displayName": "Fathom",
-      "domains": {
-        "usefathom.com": 1
-      }
-    },
-    {
-      "id": "branch",
-      "name": "Branch Metrics, Inc.",
-      "displayName": "Branch",
-      "domains": {
-        "branch.io": 1
-      }
-    },
-    {
-      "id": "appsflyer",
-      "name": "AppsFlyer Ltd.",
-      "displayName": "AppsFlyer",
-      "domains": {
-        "appsflyer.com": 1
-      }
-    },
-    {
-      "id": "applovin",
-      "name": "AppLovin Corporation",
-      "displayName": "AppLovin",
-      "domains": {
-        "adjust.com": 1,
-        "applovin.com": 0
-      }
-    },
-    {
-      "id": "kochava",
-      "name": "Kochava, Inc.",
-      "displayName": "Kochava",
-      "domains": {
-        "kochava.com": 1
-      }
-    },
-    {
-      "id": "singular",
-      "name": "Singular Labs, Inc.",
-      "displayName": "Singular",
-      "domains": {
-        "singular.net": 1
-      }
-    },
-    {
-      "id": "yandex",
-      "name": "Yandex",
-      "displayName": "Yandex",
-      "domains": {
-        "yandex.ru": 1,
-        "yandex.com": 1,
-        "yandex.net": 1
-      }
-    },
-    {
-      "id": "baidu",
-      "name": "Baidu, Inc.",
-      "displayName": "Baidu",
-      "domains": {
-        "baidu.com": 1
-      }
-    },
-    {
-      "id": "vk",
-      "name": "VK Company Limited",
-      "displayName": "VK",
-      "domains": {
-        "vk.com": 0
-      }
-    }
-  ]
+    "$comment": "Self-authored corporate-parent and category map. Not derived from any third-party dataset; see docs/ADR-002-tracker-data-source.md. Category codes: 0=Advertising/Profiling, 1=Site Analytics, 2=Hidden Behavioral Tracking. Only add a domain when its corporate owner is verifiable from public disclosure; unmapped domains are reported as Unknown rather than guessed.",
+    "entities": [
+        {
+            "id": "google",
+            "name": "Google LLC",
+            "displayName": "Google",
+            "domains": {
+                "doubleclick.net": 0,
+                "googlesyndication.com": 0,
+                "googleadservices.com": 0,
+                "googletagservices.com": 0,
+                "2mdn.net": 0,
+                "admob.com": 0,
+                "google-analytics.com": 1,
+                "googletagmanager.com": 1
+            }
+        },
+        {
+            "id": "meta",
+            "name": "Meta Platforms, Inc.",
+            "displayName": "Meta",
+            "domains": {
+                "facebook.net": 0,
+                "facebook.com": 0
+            }
+        },
+        {
+            "id": "microsoft",
+            "name": "Microsoft Corporation",
+            "displayName": "Microsoft",
+            "domains": {
+                "bing.com": 0,
+                "linkedin.com": 0,
+                "adnxs.com": 0,
+                "clarity.ms": 2
+            }
+        },
+        {
+            "id": "amazon",
+            "name": "Amazon.com, Inc.",
+            "displayName": "Amazon",
+            "domains": {
+                "amazon-adsystem.com": 0,
+                "assoc-amazon.com": 0
+            }
+        },
+        {
+            "id": "adobe",
+            "name": "Adobe Inc.",
+            "displayName": "Adobe",
+            "domains": {
+                "demdex.net": 0,
+                "everesttech.net": 0,
+                "omtrdc.net": 1,
+                "2o7.net": 1,
+                "adobedtm.com": 1
+            }
+        },
+        {
+            "id": "oracle",
+            "name": "Oracle Corporation",
+            "displayName": "Oracle",
+            "domains": {
+                "bluekai.com": 0,
+                "addthis.com": 0,
+                "moatads.com": 0,
+                "eloqua.com": 0,
+                "en25.com": 0
+            }
+        },
+        {
+            "id": "salesforce",
+            "name": "Salesforce, Inc.",
+            "displayName": "Salesforce",
+            "domains": {
+                "krxd.net": 0,
+                "pardot.com": 0,
+                "exacttarget.com": 0
+            }
+        },
+        {
+            "id": "bytedance",
+            "name": "ByteDance Ltd.",
+            "displayName": "TikTok",
+            "domains": {
+                "tiktok.com": 0
+            }
+        },
+        {
+            "id": "x-corp",
+            "name": "X Corp.",
+            "displayName": "X (Twitter)",
+            "domains": {
+                "twitter.com": 0,
+                "ads-twitter.com": 0,
+                "t.co": 0
+            }
+        },
+        {
+            "id": "snap",
+            "name": "Snap Inc.",
+            "displayName": "Snap",
+            "domains": {
+                "snapchat.com": 0,
+                "sc-static.net": 0
+            }
+        },
+        {
+            "id": "pinterest",
+            "name": "Pinterest, Inc.",
+            "displayName": "Pinterest",
+            "domains": {
+                "pinterest.com": 0
+            }
+        },
+        {
+            "id": "reddit",
+            "name": "Reddit, Inc.",
+            "displayName": "Reddit",
+            "domains": {
+                "redditstatic.com": 0
+            }
+        },
+        {
+            "id": "criteo",
+            "name": "Criteo S.A.",
+            "displayName": "Criteo",
+            "domains": {
+                "criteo.com": 0,
+                "criteo.net": 0
+            }
+        },
+        {
+            "id": "trade-desk",
+            "name": "The Trade Desk, Inc.",
+            "displayName": "The Trade Desk",
+            "domains": {
+                "adsrvr.org": 0
+            }
+        },
+        {
+            "id": "taboola",
+            "name": "Taboola.com Ltd.",
+            "displayName": "Taboola",
+            "domains": {
+                "taboola.com": 0
+            }
+        },
+        {
+            "id": "outbrain",
+            "name": "Outbrain Inc.",
+            "displayName": "Outbrain",
+            "domains": {
+                "outbrain.com": 0
+            }
+        },
+        {
+            "id": "teads",
+            "name": "Teads",
+            "displayName": "Teads",
+            "domains": {
+                "teads.tv": 0
+            }
+        },
+        {
+            "id": "pubmatic",
+            "name": "PubMatic, Inc.",
+            "displayName": "PubMatic",
+            "domains": {
+                "pubmatic.com": 0
+            }
+        },
+        {
+            "id": "magnite",
+            "name": "Magnite, Inc.",
+            "displayName": "Magnite",
+            "domains": {
+                "rubiconproject.com": 0,
+                "magnite.com": 0
+            }
+        },
+        {
+            "id": "index-exchange",
+            "name": "Index Exchange, Inc.",
+            "displayName": "Index Exchange",
+            "domains": {
+                "casalemedia.com": 0,
+                "indexexchange.com": 0
+            }
+        },
+        {
+            "id": "openx",
+            "name": "OpenX Technologies, Inc.",
+            "displayName": "OpenX",
+            "domains": {
+                "openx.net": 0
+            }
+        },
+        {
+            "id": "equativ",
+            "name": "Equativ (formerly Smart AdServer)",
+            "displayName": "Equativ",
+            "domains": {
+                "smartadserver.com": 0
+            }
+        },
+        {
+            "id": "adform",
+            "name": "Adform A/S",
+            "displayName": "Adform",
+            "domains": {
+                "adform.net": 0
+            }
+        },
+        {
+            "id": "sovrn",
+            "name": "Sovrn Holdings, Inc.",
+            "displayName": "Sovrn",
+            "domains": {
+                "lijit.com": 0
+            }
+        },
+        {
+            "id": "sharethrough",
+            "name": "Sharethrough, Inc.",
+            "displayName": "Sharethrough",
+            "domains": {
+                "sharethrough.com": 0
+            }
+        },
+        {
+            "id": "media-net",
+            "name": "Media.net Advertising FZ-LLC",
+            "displayName": "Media.net",
+            "domains": {
+                "media.net": 0
+            }
+        },
+        {
+            "id": "liveramp",
+            "name": "LiveRamp Holdings, Inc.",
+            "displayName": "LiveRamp",
+            "domains": {
+                "rlcdn.com": 0,
+                "liveramp.com": 0,
+                "pippio.com": 0
+            }
+        },
+        {
+            "id": "transunion",
+            "name": "TransUnion (Neustar)",
+            "displayName": "TransUnion",
+            "domains": {
+                "agkn.com": 0
+            }
+        },
+        {
+            "id": "experian",
+            "name": "Experian plc (Tapad)",
+            "displayName": "Experian",
+            "domains": {
+                "tapad.com": 0
+            }
+        },
+        {
+            "id": "lotame",
+            "name": "Lotame Solutions, Inc.",
+            "displayName": "Lotame",
+            "domains": {
+                "crwdcntrl.net": 0
+            }
+        },
+        {
+            "id": "id5",
+            "name": "ID5 Technology Ltd.",
+            "displayName": "ID5",
+            "domains": {
+                "id5-sync.com": 0
+            }
+        },
+        {
+            "id": "permutive",
+            "name": "Permutive, Inc.",
+            "displayName": "Permutive",
+            "domains": {
+                "permutive.com": 0
+            }
+        },
+        {
+            "id": "bombora",
+            "name": "Bombora, Inc.",
+            "displayName": "Bombora",
+            "domains": {
+                "ml314.com": 0
+            }
+        },
+        {
+            "id": "quantcast",
+            "name": "Quantcast Corporation",
+            "displayName": "Quantcast",
+            "domains": {
+                "quantserve.com": 0,
+                "quantcast.com": 0
+            }
+        },
+        {
+            "id": "comscore",
+            "name": "Comscore, Inc.",
+            "displayName": "Comscore",
+            "domains": {
+                "scorecardresearch.com": 1
+            }
+        },
+        {
+            "id": "nielsen",
+            "name": "The Nielsen Company",
+            "displayName": "Nielsen",
+            "domains": {
+                "imrworldwide.com": 1,
+                "nielsen.com": 1
+            }
+        },
+        {
+            "id": "chartbeat",
+            "name": "Chartbeat, Inc.",
+            "displayName": "Chartbeat",
+            "domains": {
+                "chartbeat.com": 1,
+                "chartbeat.net": 1
+            }
+        },
+        {
+            "id": "contentsquare",
+            "name": "Contentsquare SAS",
+            "displayName": "Contentsquare",
+            "domains": {
+                "contentsquare.net": 2,
+                "hotjar.com": 2,
+                "hotjar.io": 2,
+                "clicktale.net": 2,
+                "heap.io": 1,
+                "heapanalytics.com": 1
+            }
+        },
+        {
+            "id": "fullstory",
+            "name": "FullStory, Inc.",
+            "displayName": "FullStory",
+            "domains": {
+                "fullstory.com": 2
+            }
+        },
+        {
+            "id": "logrocket",
+            "name": "LogRocket, Inc.",
+            "displayName": "LogRocket",
+            "domains": {
+                "logrocket.com": 2,
+                "lr-ingest.io": 2
+            }
+        },
+        {
+            "id": "mouseflow",
+            "name": "Mouseflow, Inc.",
+            "displayName": "Mouseflow",
+            "domains": {
+                "mouseflow.com": 2
+            }
+        },
+        {
+            "id": "inspectlet",
+            "name": "Inspectlet",
+            "displayName": "Inspectlet",
+            "domains": {
+                "inspectlet.com": 2
+            }
+        },
+        {
+            "id": "smartlook",
+            "name": "Smartlook.com, s.r.o.",
+            "displayName": "Smartlook",
+            "domains": {
+                "smartlook.com": 2
+            }
+        },
+        {
+            "id": "glassbox",
+            "name": "Glassbox Ltd.",
+            "displayName": "Glassbox",
+            "domains": {
+                "glassboxdigital.io": 2,
+                "sessioncam.com": 2
+            }
+        },
+        {
+            "id": "quantum-metric",
+            "name": "Quantum Metric, Inc.",
+            "displayName": "Quantum Metric",
+            "domains": {
+                "quantummetric.com": 2
+            }
+        },
+        {
+            "id": "crazy-egg",
+            "name": "Crazy Egg, Inc.",
+            "displayName": "Crazy Egg",
+            "domains": {
+                "crazyegg.com": 2
+            }
+        },
+        {
+            "id": "lucky-orange",
+            "name": "Lucky Orange LLC",
+            "displayName": "Lucky Orange",
+            "domains": {
+                "luckyorange.com": 2
+            }
+        },
+        {
+            "id": "amplitude",
+            "name": "Amplitude, Inc.",
+            "displayName": "Amplitude",
+            "domains": {
+                "amplitude.com": 1
+            }
+        },
+        {
+            "id": "mixpanel",
+            "name": "Mixpanel, Inc.",
+            "displayName": "Mixpanel",
+            "domains": {
+                "mixpanel.com": 1
+            }
+        },
+        {
+            "id": "twilio",
+            "name": "Twilio Inc.",
+            "displayName": "Twilio (Segment)",
+            "domains": {
+                "segment.com": 1,
+                "segment.io": 1
+            }
+        },
+        {
+            "id": "braze",
+            "name": "Braze, Inc.",
+            "displayName": "Braze",
+            "domains": {
+                "braze.com": 0,
+                "appboy.com": 0
+            }
+        },
+        {
+            "id": "klaviyo",
+            "name": "Klaviyo, Inc.",
+            "displayName": "Klaviyo",
+            "domains": {
+                "klaviyo.com": 0
+            }
+        },
+        {
+            "id": "hubspot",
+            "name": "HubSpot, Inc.",
+            "displayName": "HubSpot",
+            "domains": {
+                "hubspot.com": 1,
+                "hs-analytics.net": 1,
+                "hsforms.com": 1
+            }
+        },
+        {
+            "id": "optimizely",
+            "name": "Optimizely, Inc.",
+            "displayName": "Optimizely",
+            "domains": {
+                "optimizely.com": 1
+            }
+        },
+        {
+            "id": "wingify",
+            "name": "Wingify Software Pvt. Ltd.",
+            "displayName": "VWO",
+            "domains": {
+                "visualwebsiteoptimizer.com": 1
+            }
+        },
+        {
+            "id": "new-relic",
+            "name": "New Relic, Inc.",
+            "displayName": "New Relic",
+            "domains": {
+                "newrelic.com": 1,
+                "nr-data.net": 1
+            }
+        },
+        {
+            "id": "datadog",
+            "name": "Datadog, Inc.",
+            "displayName": "Datadog",
+            "domains": {
+                "datadoghq.com": 1
+            }
+        },
+        {
+            "id": "cloudflare",
+            "name": "Cloudflare, Inc.",
+            "displayName": "Cloudflare",
+            "domains": {
+                "cloudflareinsights.com": 1
+            }
+        },
+        {
+            "id": "matomo",
+            "name": "InnoCraft Ltd. (Matomo)",
+            "displayName": "Matomo",
+            "domains": {
+                "matomo.cloud": 1
+            }
+        },
+        {
+            "id": "plausible",
+            "name": "Plausible Insights OÜ",
+            "displayName": "Plausible",
+            "domains": {
+                "plausible.io": 1
+            }
+        },
+        {
+            "id": "fathom",
+            "name": "Conva Ventures Inc. (Fathom Analytics)",
+            "displayName": "Fathom",
+            "domains": {
+                "usefathom.com": 1
+            }
+        },
+        {
+            "id": "branch",
+            "name": "Branch Metrics, Inc.",
+            "displayName": "Branch",
+            "domains": {
+                "branch.io": 1
+            }
+        },
+        {
+            "id": "appsflyer",
+            "name": "AppsFlyer Ltd.",
+            "displayName": "AppsFlyer",
+            "domains": {
+                "appsflyer.com": 1
+            }
+        },
+        {
+            "id": "applovin",
+            "name": "AppLovin Corporation",
+            "displayName": "AppLovin",
+            "domains": {
+                "adjust.com": 1,
+                "applovin.com": 0
+            }
+        },
+        {
+            "id": "kochava",
+            "name": "Kochava, Inc.",
+            "displayName": "Kochava",
+            "domains": {
+                "kochava.com": 1
+            }
+        },
+        {
+            "id": "singular",
+            "name": "Singular Labs, Inc.",
+            "displayName": "Singular",
+            "domains": {
+                "singular.net": 1
+            }
+        },
+        {
+            "id": "yandex",
+            "name": "Yandex",
+            "displayName": "Yandex",
+            "domains": {
+                "yandex.ru": 1,
+                "yandex.com": 1,
+                "yandex.net": 1
+            }
+        },
+        {
+            "id": "baidu",
+            "name": "Baidu, Inc.",
+            "displayName": "Baidu",
+            "domains": {
+                "baidu.com": 1
+            }
+        },
+        {
+            "id": "vk",
+            "name": "VK Company Limited",
+            "displayName": "VK",
+            "domains": {
+                "vk.com": 0
+            }
+        }
+    ]
 }

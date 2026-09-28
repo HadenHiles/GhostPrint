@@ -1,4 +1,10 @@
-import { test as base, chromium, type BrowserContext, type Worker } from '@playwright/test';
+import {
+  test as base,
+  chromium,
+  type BrowserContext,
+  type Page,
+  type Worker,
+} from '@playwright/test';
 import { fileURLToPath } from 'node:url';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -10,6 +16,7 @@ export const test = base.extend<{
   context: BrowserContext;
   extensionId: string;
   serviceWorker: Worker;
+  extensionPage: Page;
 }>({
   // eslint-disable-next-line no-empty-pattern
   context: async ({}, use) => {
@@ -33,6 +40,18 @@ export const test = base.extend<{
 
   extensionId: async ({ serviceWorker }, use) => {
     await use(new URL(serviceWorker.url()).host);
+  },
+
+  /**
+   * A stable extension context for reading chrome.storage. The MV3 service worker is
+   * terminated when idle, which invalidates its Playwright handle mid-test; an
+   * extension page has the same storage access and does not go away.
+   */
+  extensionPage: async ({ context, extensionId }, use) => {
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/options/index.html`);
+    await use(page);
+    await page.close();
   },
 });
 

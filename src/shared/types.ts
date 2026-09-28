@@ -22,6 +22,8 @@ export interface TabLedger {
   startedAt: number;
   /** Keyed by eTLD+1. */
   trackers: Record<string, TrackerHit>;
+  /** Third-party requests seen on this page, including ones past the cap. */
+  requests: number;
   /** True once the per-page request cap is hit; `hits` stop incrementing. */
   capped: boolean;
 }
@@ -36,9 +38,11 @@ export interface CategoryTotals {
 export interface LedgerSummary {
   tabId: number;
   pageDomain: string | null;
+  /** Distinct third-party domains observed. */
   total: number;
   byCategory: CategoryTotals;
   topEntity: { id: string; name: string; count: number } | null;
+  capped: boolean;
 }
 
 /* ------------------------------------------------------------------ */

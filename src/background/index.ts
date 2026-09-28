@@ -1,4 +1,6 @@
 import { installRouter } from './messaging';
+import { installRequestMonitor } from './request-monitor';
+import { clear, flush, getSummary, hydrate } from './tab-state';
 import { clearAll, DEFAULT_LOCAL, readLocal, writeLocal } from '@/shared/storage';
 import type { Request } from '@/shared/types';
 
@@ -9,17 +11,28 @@ chrome.runtime.onInstalled.addListener(() => {
   })();
 });
 
-installRouter(async (request: Request) => {
+installRequestMonitor();
+
+installRouter(async (request: Request, sender) => {
   switch (request.type) {
     case 'PING':
       return { type: 'PONG', at: Date.now() };
 
-    case 'GET_LEDGER':
-      // Populated by P1-03 (request interception engine).
-      return { type: 'LEDGER', summary: null };
+    case 'GET_LEDGER': {
+      await hydrate();
+      const tabId = request.tabId ?? sender.tab?.id ?? (await activeTabId());
+      return { type: 'LEDGER', summary: tabId === null ? null : getSummary(tabId) };
+    }
 
     case 'CLEAR_ALL_DATA':
+      clear();
+      await flush();
       await clearAll();
       return { type: 'CLEARED' };
   }
 });
+
+async function activeTabId(): Promise<number | null> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  return tab?.id ?? null;
+}

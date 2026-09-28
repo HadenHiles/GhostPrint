@@ -26,39 +26,39 @@ const OUT_FILE = fileURLToPath(new URL('src/data/trackers.json', ROOT));
 const CATEGORY_NAMES = ['advertising', 'analytics', 'behavioral', 'unknown'];
 
 async function readList() {
-  const fresh =
-    existsSync(CACHE_FILE) && Date.now() - statSync(CACHE_FILE).mtimeMs < CACHE_TTL_MS;
-  if (fresh && !process.argv.includes('--refresh')) return readFileSync(CACHE_FILE, 'utf8');
+    const fresh =
+        existsSync(CACHE_FILE) && Date.now() - statSync(CACHE_FILE).mtimeMs < CACHE_TTL_MS;
+    if (fresh && !process.argv.includes('--refresh')) return readFileSync(CACHE_FILE, 'utf8');
 
-  const response = await fetch(SOURCE.url);
-  if (!response.ok) throw new Error(`${SOURCE.title}: HTTP ${response.status}`);
-  const text = await response.text();
-  mkdirSync(fileURLToPath(new URL('.cache/', ROOT)), { recursive: true });
-  writeFileSync(CACHE_FILE, text);
-  return text;
+    const response = await fetch(SOURCE.url);
+    if (!response.ok) throw new Error(`${SOURCE.title}: HTTP ${response.status}`);
+    const text = await response.text();
+    mkdirSync(fileURLToPath(new URL('.cache/', ROOT)), { recursive: true });
+    writeFileSync(CACHE_FILE, text);
+    return text;
 }
 
 function loadSeed() {
-  const seed = JSON.parse(readFileSync(SEED_FILE, 'utf8'));
-  const entities = new Map();
-  const byDomain = new Map();
+    const seed = JSON.parse(readFileSync(SEED_FILE, 'utf8'));
+    const entities = new Map();
+    const byDomain = new Map();
 
-  for (const entity of seed.entities) {
-    if (entities.has(entity.id)) throw new Error(`Duplicate entity id: ${entity.id}`);
-    entities.set(entity.id, { name: entity.name, displayName: entity.displayName });
+    for (const entity of seed.entities) {
+        if (entities.has(entity.id)) throw new Error(`Duplicate entity id: ${entity.id}`);
+        entities.set(entity.id, { name: entity.name, displayName: entity.displayName });
 
-    for (const [domain, category] of Object.entries(entity.domains)) {
-      if (getDomain(domain, { allowPrivateDomains: false }) !== domain) {
-        throw new Error(`Seed domain is not a registrable domain: ${domain}`);
-      }
-      if (byDomain.has(domain)) throw new Error(`Domain claimed by two entities: ${domain}`);
-      if (!Number.isInteger(category) || category < 0 || category > 2) {
-        throw new Error(`Invalid category for ${domain}: ${category}`);
-      }
-      byDomain.set(domain, { entityId: entity.id, category });
+        for (const [domain, category] of Object.entries(entity.domains)) {
+            if (getDomain(domain, { allowPrivateDomains: false }) !== domain) {
+                throw new Error(`Seed domain is not a registrable domain: ${domain}`);
+            }
+            if (byDomain.has(domain)) throw new Error(`Domain claimed by two entities: ${domain}`);
+            if (!Number.isInteger(category) || category < 0 || category > 2) {
+                throw new Error(`Invalid category for ${domain}: ${category}`);
+            }
+            byDomain.set(domain, { entityId: entity.id, category });
+        }
     }
-  }
-  return { entities, byDomain };
+    return { entities, byDomain };
 }
 
 const listText = await readList();
@@ -69,39 +69,39 @@ const seed = loadSeed();
 // a seeded registrable domain, so a verified parent and category always apply.
 const hosts = new Map();
 for (const [domain, { entityId, category }] of seed.byDomain) {
-  hosts.set(domain, [entityId, category]);
+    hosts.set(domain, [entityId, category]);
 }
 
 let enriched = 0;
 for (const host of listHosts) {
-  if (hosts.has(host)) continue;
-  const registrable = getDomain(host, { allowPrivateDomains: false });
-  const owner = registrable === null ? undefined : seed.byDomain.get(registrable);
-  if (owner === undefined) continue;
-  hosts.set(host, [owner.entityId, owner.category]);
-  enriched += 1;
+    if (hosts.has(host)) continue;
+    const registrable = getDomain(host, { allowPrivateDomains: false });
+    const owner = registrable === null ? undefined : seed.byDomain.get(registrable);
+    if (owner === undefined) continue;
+    hosts.set(host, [owner.entityId, owner.category]);
+    enriched += 1;
 }
 
 const usedEntityIds = new Set([...hosts.values()].map(([id]) => id));
 const entities = Object.fromEntries(
-  [...seed.entities.entries()].filter(([id]) => usedEntityIds.has(id)),
+    [...seed.entities.entries()].filter(([id]) => usedEntityIds.has(id)),
 );
 
 const artifact = {
-  version: `${version}+seed`,
-  generatedAt: new Date().toISOString().slice(0, 10),
-  sources: [
-    SOURCE,
-    {
-      id: 'ghostprint-entities',
-      title: 'GhostPrint entity map',
-      license: 'Proprietary',
-      attribution: 'GhostPrint',
-    },
-  ],
-  categories: CATEGORY_NAMES,
-  entities,
-  hosts: Object.fromEntries([...hosts.entries()].sort(([a], [b]) => a.localeCompare(b))),
+    version: `${version}+seed`,
+    generatedAt: new Date().toISOString().slice(0, 10),
+    sources: [
+        SOURCE,
+        {
+            id: 'ghostprint-entities',
+            title: 'GhostPrint entity map',
+            license: 'Proprietary',
+            attribution: 'GhostPrint',
+        },
+    ],
+    categories: CATEGORY_NAMES,
+    entities,
+    hosts: Object.fromEntries([...hosts.entries()].sort(([a], [b]) => a.localeCompare(b))),
 };
 
 mkdirSync(fileURLToPath(new URL('src/data/', ROOT)), { recursive: true });
@@ -111,5 +111,5 @@ console.log(`${SOURCE.title} ${version}: ${listHosts.size} host patterns availab
 console.log(`Seed: ${seed.byDomain.size} domains, ${Object.keys(entities).length} entities`);
 console.log(`Enriched with ${enriched} hosts under seeded domains`);
 console.log(
-  `Wrote ${Object.keys(artifact.hosts).length} hosts, ${(statSync(OUT_FILE).size / 1024).toFixed(1)} KB`,
+    `Wrote ${Object.keys(artifact.hosts).length} hosts, ${(statSync(OUT_FILE).size / 1024).toFixed(1)} KB`,
 );

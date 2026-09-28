@@ -19,16 +19,18 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 1 — MVP |
-| Active task | `P1-03` (request interception engine) |
+| Active task | `P1-04` (Ghost Counter floating dashboard) |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` needs a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-03` → `P1-04` → `P1-05`, then `P1-01b` before `P1-07` |
+| Next up | `P1-04` → `P1-05` → `P1-06`, then `P1-01b` before `P1-07` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
 [docs/ADR-002-tracker-data-source.md](docs/ADR-002-tracker-data-source.md). The shipped
 dictionary is high-precision (208 hosts, 69 entities, every one attributed to a verified
 corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
+**`P1-03` complete.** 109 unit tests, 11 e2e specs, including ledger rehydration after a
+CDP-forced service-worker termination.
 
 ---
 
@@ -249,10 +251,22 @@ never folded into the headline number.
 
 ---
 
-### `P1-03` Request interception engine
+### `P1-03` Request interception engine — **`[x]` done**
 **Deps:** `P0-02`, `P1-02`
 **Original roadmap item:** *Manifest V3 Core Engine*
 
+**Outcome:** pure counting rules live in [src/shared/ledger.ts](src/shared/ledger.ts) with
+no Chrome dependency, so they are unit-tested directly; the Chrome-bound store is
+[src/background/tab-state.ts](src/background/tab-state.ts) and the listeners are in
+[src/background/request-monitor.ts](src/background/request-monitor.ts).
+
+Two refinements over the original plan:
+- Navigations to non-HTTP URLs (`about:blank`, `chrome://`) drop the tab's ledger instead
+  of creating an empty one, which otherwise left junk entries in session storage.
+- The badge counts *identified* trackers only. Unknown third parties are still recorded
+  and shown in the popup, but promoting them to the badge would overstate what we can name.
+
+**Steps**
 **Critical design note:** `declarativeNetRequest` is a *blocking/modifying* API — it does **not** give you per-request observation unless you use `onRuleMatchedDebug` (which is **dev-only, unpacked extensions only**). For production observation the extension must use `chrome.webRequest.onBeforeRequest` in **non-blocking (observe-only)** mode, which remains available in MV3. Architecture:
 
 - **Observation path (always on):** `webRequest.onBeforeRequest` with `{ urls: ['<all_urls>'] }`, no `extraHeaders`, no blocking.
@@ -268,9 +282,9 @@ never folded into the headline number.
 7. Add a request-rate guard: if a page exceeds 2,000 tracked requests, stop recording new *hits* but keep unique-domain counting (prevents unbounded memory on pathological pages).
 
 **Done when:**
-- Loading `amazon.com`, `cnn.com`, `nytimes.com`, and a Shopify storefront each produces a non-empty, correctly-categorized tracker ledger.
-- Service worker termination + revival restores the ledger from `chrome.storage.session` with zero data loss (verified by an e2e test that force-terminates the SW).
-- Memory profile: < 10 MB retained with 20 tabs open for 30 minutes.
+- Loading `amazon.com`, `cnn.com`, `nytimes.com`, and a Shopify storefront each produces a non-empty, correctly-categorized tracker ledger. ⚠️ Verified against stubbed pages in [tests/e2e/tracking.spec.ts](tests/e2e/tracking.spec.ts); live-site verification needs network access (`P1-01b`).
+- Service worker termination + revival restores the ledger from `chrome.storage.session` with zero data loss (verified by an e2e test that force-terminates the SW). ✅ [tests/e2e/sw-lifecycle.spec.ts](tests/e2e/sw-lifecycle.spec.ts), terminated via CDP `ServiceWorker.stopAllWorkers`.
+- Memory profile: < 10 MB retained with 20 tabs open for 30 minutes. ⏳ deferred to `P1-06`, which builds the measurement harness.
 
 ---
 

@@ -11,8 +11,8 @@ export default tseslint.config(
         languageOptions: {
             parserOptions: {
                 projectService: {
-            allowDefaultProject: ['eslint.config.js', 'tools/*.mjs', 'tools/sources/*.mjs'],
-        },
+                    allowDefaultProject: ['eslint.config.js', 'tools/*.mjs', 'tools/sources/*.mjs'],
+                },
                 tsconfigRootDir: import.meta.dirname,
             },
             globals: { ...globals.browser, ...globals.webextensions },
