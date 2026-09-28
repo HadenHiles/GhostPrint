@@ -18,6 +18,7 @@
     "bench:fixture": "node tools/benchmark.mjs --fixture",
     "bench:required": "node tools/benchmark.mjs --required",
     "accuracy": "node tools/accuracy-report.mjs",
+    "crawl:prevalence": "node tools/crawl-prevalence.mjs",
     "update-trackers": "node tools/build-tracker-db.mjs --refresh",
     "build-tracker-db": "node tools/build-tracker-db.mjs"
   },

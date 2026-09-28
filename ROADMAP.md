@@ -211,7 +211,7 @@ CI workflow committed, `dist/` loads unpacked with zero console errors.
 
 ---
 
-### `P1-01b` Crawl-derived prevalence & recall expansion — **`[!]` blocked**
+### `P1-01b` Crawl-derived prevalence & recall expansion — **`[~]` runner ready; live crawl pending**
 **Deps:** `P1-04`
 **Blocker:** needs a machine where headless Chromium has network access. Verified
 unavailable in the current environment (`curl` works, Chromium returns
@@ -231,6 +231,14 @@ measures list-maintenance effort, not tracker reach. Real prevalence requires ob
 4. Rank EasyPrivacy hosts by measured prevalence; take the top N that fits the size budget.
 5. Persist the raw crawl as the `P1-07` ground-truth corpus — the same run feeds both tasks.
 6. Replace `rank` with `prevalence` in the artifact and update the dictionary tests.
+
+**Implementation:** [tools/crawl-prevalence.mjs](tools/crawl-prevalence.mjs) accepts a
+JSON URL list (`--urls-file`), crawls up to 1,000 sites with the built extension, records
+third-party hostnames per first-party domain, and emits ignored `crawl-results.json` plus
+`prevalence-results.json`. Run `npm run crawl:prevalence` with the default performance
+list for a smoke crawl, or pass a downloaded Tranco list with `--urls-file`. The raw
+capture is intentionally separate from the hand-labeled P1-07 corpus: crawl output is
+candidate evidence until a reviewer labels tracker/non-tracker and category fields.
 
 **Done when:** `trackers.json` covers ≥ 500 hosts ranked by measured prevalence, stays
 ≤ 120 KB, and `P1-07` recall ≥ 85%.

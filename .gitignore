@@ -9,4 +9,6 @@ bench-results.json
 bench-results.md
 accuracy-results.json
 accuracy-results.md
+crawl-results.json
+prevalence-results.json
 .cache/
