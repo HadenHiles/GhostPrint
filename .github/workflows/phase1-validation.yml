@@ -1,0 +1,68 @@
+name: Phase 1 validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      tranco_url:
+        description: URL of a Tranco CSV or JSON URL-list file
+        required: true
+        default: https://tranco-list.eu/top-1m.csv.zip
+        type: string
+      crawl_limit:
+        description: Number of sites to crawl
+        required: true
+        default: '1000'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  live-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+
+      - name: Download URL list
+        env:
+          TRANCO_URL: ${{ inputs.tranco_url }}
+        run: |
+          curl --fail --location --retry 3 "$TRANCO_URL" --output /tmp/site-list
+          case "$TRANCO_URL" in
+            *.zip) unzip -p /tmp/site-list | awk -F, 'NF >= 2 && $1 ~ /^[0-9]+$/ { print "https://" $2 }' | head -n "${{ inputs.crawl_limit }}" > /tmp/site-list.txt ;;
+            *.json) cp /tmp/site-list /tmp/site-list.json ;;
+            *) cp /tmp/site-list /tmp/site-list.txt ;;
+          esac
+          if [[ -f /tmp/site-list.json ]]; then
+            cp /tmp/site-list.json /tmp/crawl-urls.json
+          else
+            node -e "const fs=require('fs'); const urls=fs.readFileSync('/tmp/site-list.txt','utf8').trim().split(/\\s+/).filter(Boolean); fs.writeFileSync('/tmp/crawl-urls.json', JSON.stringify(urls.slice(0, Number(process.env.CRAWL_LIMIT))));" 
+          fi
+        env:
+          CRAWL_LIMIT: ${{ inputs.crawl_limit }}
+
+      - name: Run live performance benchmark
+        run: xvfb-run -a npm run bench:required
+
+      - name: Crawl prevalence candidates
+        run: xvfb-run -a npm run crawl:prevalence -- --urls-file /tmp/crawl-urls.json --limit ${{ inputs.crawl_limit }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase1-validation-results
+          path: |
+            bench-results.json
+            bench-results.md
+            crawl-results.json
+            prevalence-results.json

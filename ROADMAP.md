@@ -19,10 +19,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 1 — MVP |
-| Active task | `P1-06` (performance benchmark harness) |
+| Active task | Phase 1 validation handoff |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-01b` live crawl → `P1-07` live corpus → Phase 1 exit gate |
+| Next up | Run `.github/workflows/phase1-validation.yml` on a network-enabled runner |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -38,6 +38,8 @@ egress audit are committed and green.
 threshold remains pending on the network-enabled performance workflow.
 **`P1-07` evaluator complete.** Offline replay and reporting work against synthetic
 fixtures; the representative 15-site e-commerce corpus remains pending on `P1-01b`.
+**Phase 1 implementation complete.** Remaining work is evidence collection on a
+network-enabled runner, followed by manual labeling of crawl candidates.
 
 ---
 
@@ -422,8 +424,18 @@ for user trust) across the representative corpus, reproducibly, offline. ✅ eva
 
 ---
 
-### ✅ Phase 1 exit gate
-All of: `P1-06` passing · `P1-07` ≥ 85% recall · `P1-04` 20-site visual matrix clean · `P1-08` green.
+### Phase 1 exit gate — **implementation complete; evidence pending**
+
+Implementation gates are green: `P1-04` automated widget coverage, `P1-08` hardening,
+`P1-06` harness, and `P1-07` evaluator. The remaining evidence gates must be run from
+`.github/workflows/phase1-validation.yml` on a network-enabled runner:
+
+- `P1-06` live top-50 benchmark: ≤ 5% per site and ≤ 2% aggregate.
+- `P1-01b` crawl: ≥ 500 prevalence-ranked hosts within the bundle budget.
+- `P1-07` representative corpus: 15 labeled e-commerce fixtures, ≥ 85% recall and
+  ≥ 95% precision.
+- `P1-04` live 20-site compatibility pass: no CTA overlap, console errors, or duplicate
+  widget injection.
 
 ---
 
