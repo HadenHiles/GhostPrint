@@ -22,7 +22,7 @@
 | Active task | `P1-06` (performance benchmark harness) |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-06` → `P1-08`, then `P1-01b` before `P1-07` |
+| Next up | `P1-06` → `P1-01b` → `P1-07` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -32,6 +32,8 @@ corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
 **`P1-03` complete.** Ledger rehydrates after a CDP-forced service-worker termination.
 **`P1-04` complete.** Closed Shadow DOM counter with corner-collision avoidance.
 **`P1-05` complete.** 141 unit tests, 30 e2e specs, all green across repeated runs.
+**`P1-08` complete.** Privacy policy, threat model, source/manifest audit, and bundled
+egress audit are committed and green.
 
 ---
 
@@ -371,15 +373,16 @@ Two refinements over the original plan:
 
 ---
 
-### `P1-08` MVP hardening & privacy posture
+### `P1-08` MVP hardening & privacy posture — **`[x]` done**
 **Deps:** `P1-04`, `P1-05`
 **Steps**
-1. Static check in CI: assert the built bundle contains no `fetch(`/`XMLHttpRequest`/`navigator.sendBeacon` outside the allow-listed build-time tooling. This enforces the zero-egress constraint mechanically.
-2. Write `docs/PRIVACY.md` stating: all processing is local, nothing is transmitted, what is stored, and the retention window.
-3. Sanitize every host-page-derived string before rendering (use `textContent`, never `innerHTML`).
-4. Threat-model pass: confirm the content script cannot be used by a hostile page to exfiltrate cross-origin data (no message listeners accepting `window.postMessage` from the page without origin + shape validation).
+1. Static check in CI: assert the built bundle contains no `fetch(`/`XMLHttpRequest`/`navigator.sendBeacon` outside the allow-listed build-time tooling. ✅ `tools/check-egress.mjs`
+2. Write `docs/PRIVACY.md` stating: all processing is local, nothing is transmitted, what is stored, and the retention window. ✅
+3. Sanitize every host-page-derived string before rendering (use `textContent`, never `innerHTML`). ✅ enforced by lint and `tools/check-hardening.mjs`
+4. Threat-model pass: confirm the content script cannot be used by a hostile page to exfiltrate cross-origin data (no message listeners accepting `window.postMessage` from the page without origin + shape validation). ✅ `docs/THREAT-MODEL.md`
+5. Validate the manifest's required permissions, top-frame-only injection, strict extension-page CSP, and required privacy documents. ✅ `tools/check-hardening.mjs`
 
-**Done when:** the CI egress check passes, `PRIVACY.md` is committed, and the threat-model checklist in `docs/THREAT-MODEL.md` is fully signed off.
+**Done when:** `npm run check:egress` and `npm run check:hardening` pass, `PRIVACY.md` is committed, and the threat-model checklist in `docs/THREAT-MODEL.md` is fully signed off. ✅
 
 ---
 

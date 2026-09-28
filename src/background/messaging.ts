@@ -49,7 +49,16 @@ export async function send<R extends Request>(request: R): Promise<ResponseFor<R
 }
 
 function isRequest(value: unknown): value is Request {
-  return typeof value === 'object' && value !== null && typeof (value as Request).type === 'string';
+  if (typeof value !== 'object' || value === null) return false;
+
+  const type = (value as { type?: unknown }).type;
+  return (
+    type === 'PING' ||
+    type === 'GET_LEDGER' ||
+    type === 'GET_DETAILS' ||
+    type === 'GET_HISTORY' ||
+    type === 'CLEAR_ALL_DATA'
+  );
 }
 
 function isErrorResponse(value: unknown): value is ErrorResponse {

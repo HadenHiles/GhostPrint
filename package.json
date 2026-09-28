@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check:egress": "node tools/check-egress.mjs",
+    "check:hardening": "node tools/check-hardening.mjs",
     "update-trackers": "node tools/build-tracker-db.mjs --refresh",
     "build-tracker-db": "node tools/build-tracker-db.mjs"
   },
