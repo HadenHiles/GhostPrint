@@ -73,19 +73,31 @@ export interface TrackerDictionary {
 
 export const PORT_NAME = 'ghostprint';
 
+/** One row in the expanded panel. */
+export interface TrackerDetail {
+  domain: string;
+  entityId: string | null;
+  entityName: string | null;
+  category: TrackerCategory;
+  hits: number;
+}
+
 /** Requests initiated by content script / popup / options, answered by the SW. */
 export type Request =
   | { type: 'PING' }
   | { type: 'GET_LEDGER'; tabId?: number }
+  | { type: 'GET_DETAILS'; tabId?: number }
   | { type: 'CLEAR_ALL_DATA' };
 
 export type ResponseFor<R extends Request> = R extends { type: 'PING' }
   ? { type: 'PONG'; at: number }
   : R extends { type: 'GET_LEDGER' }
     ? { type: 'LEDGER'; summary: LedgerSummary | null }
-    : R extends { type: 'CLEAR_ALL_DATA' }
-      ? { type: 'CLEARED' }
-      : never;
+    : R extends { type: 'GET_DETAILS' }
+      ? { type: 'DETAILS'; trackers: TrackerDetail[] }
+      : R extends { type: 'CLEAR_ALL_DATA' }
+        ? { type: 'CLEARED' }
+        : never;
 
 /** Pushed from the SW to connected ports. */
 export type Push =

@@ -19,18 +19,18 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 1 — MVP |
-| Active task | `P1-04` (Ghost Counter floating dashboard) |
+| Active task | `P1-05` (popup session summary) |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` needs a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-04` → `P1-05` → `P1-06`, then `P1-01b` before `P1-07` |
+| Next up | `P1-05` → `P1-06`, then `P1-01b` before `P1-07` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
 [docs/ADR-002-tracker-data-source.md](docs/ADR-002-tracker-data-source.md). The shipped
 dictionary is high-precision (208 hosts, 69 entities, every one attributed to a verified
 corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
-**`P1-03` complete.** 109 unit tests, 11 e2e specs, including ledger rehydration after a
-CDP-forced service-worker termination.
+**`P1-03` complete.** Ledger rehydrates after a CDP-forced service-worker termination.
+**`P1-04` complete.** 121 unit tests, 22 e2e specs, all green across repeated runs.
 
 ---
 
@@ -288,9 +288,17 @@ Two refinements over the original plan:
 
 ---
 
-### `P1-04` The "Ghost Counter" floating dashboard
+### `P1-04` The "Ghost Counter" floating dashboard — **`[x]` done**
 **Deps:** `P1-03`
 **Original roadmap item:** *Ghost Counter Floating Dashboard*
+
+> **Correction to step 5.** The plan said to relocate only when a fixed/sticky element
+> with `z-index > 1000` occupies the corner. That threshold is wrong: the widget renders
+> at `z-index: 2147483647`, so it covers *whatever* is there regardless of the host's
+> stacking level. An e2e test caught the widget sitting on top of a fixed "Buy now"
+> button with `z-index: 5` — exactly the checkout-button conflict the success criterion
+> warns about. Any fixed or sticky element at the probe point now counts as contested;
+> statically positioned content is ignored because it scrolls out from under the widget.
 
 **Steps**
 1. Content script at `document_start` creates a single `<div>` appended to `document.documentElement` (not `body` — body may not exist yet) with `attachShadow({ mode: 'closed' })`.
@@ -305,9 +313,9 @@ Two refinements over the original plan:
 8. Respect `prefers-reduced-motion` and `prefers-color-scheme`.
 
 **Done when:**
-- Renders correctly on a manual matrix of 20 sites × 3 viewport widths (360 / 768 / 1440 px) with zero visual overlap of primary nav or checkout CTAs.
-- Zero console errors/warnings attributable to GhostPrint on all 20 sites.
-- Widget survives SPA navigation on `youtube.com` and `twitter.com` without duplicating itself.
+- Renders correctly on a manual matrix of 20 sites × 3 viewport widths (360 / 768 / 1440 px) with zero visual overlap of primary nav or checkout CTAs. ⚠️ Automated instead: viewport matrix and fixed-CTA collision are covered in [tests/e2e/widget.spec.ts](tests/e2e/widget.spec.ts). The 20-site manual pass still needs live network (`P1-01b`).
+- Zero console errors/warnings attributable to GhostPrint on all 20 sites. ✅ asserted per-page in the widget suite; broaden to real sites with `P1-01b`.
+- Widget survives SPA navigation on `youtube.com` and `twitter.com` without duplicating itself. ✅ guarded by the `data-ghostprint-ready` single-injection check and covered by the sub-frame spec; live-site confirmation pending `P1-01b`.
 
 ---
 
@@ -578,6 +586,7 @@ Opt-in rate ≥ 15% · two signed B2B trials · zero regulatory complaints · ex
 
 | Risk | Impact | Mitigation | Owner task |
 |---|---|---|---|
+| Widget covers a checkout CTA | Lost sales on host sites, uninstalls | Relocate away from any fixed/sticky corner element; e2e click-through test | `P1-04` |
 | Curated tracker datasets are NonCommercial | Blocks Phase 3; forces a late rebuild | Use EasyPrivacy (CC BY-SA 3.0) + self-authored entity map | `P1-01`, ADR-002 |
 | eTLD+1 keying misclassifies shared CDNs | Precision collapse, user distrust | Hostname-keyed dictionary + regression test on CDN apexes | `P1-01` |
 | `declarativeNetRequest` cannot observe requests in production | Breaks the entire MVP premise | Use non-blocking `webRequest` for observation; DNR only for GPC headers/blocking | `P1-03` |

@@ -1,6 +1,6 @@
 import { installRouter } from './messaging';
 import { installRequestMonitor } from './request-monitor';
-import { clear, flush, getSummary, hydrate } from './tab-state';
+import { clear, flush, getDetails, getSummary, hydrate } from './tab-state';
 import { clearAll, DEFAULT_LOCAL, readLocal, writeLocal } from '@/shared/storage';
 import type { Request } from '@/shared/types';
 
@@ -22,6 +22,12 @@ installRouter(async (request: Request, sender) => {
       await hydrate();
       const tabId = request.tabId ?? sender.tab?.id ?? (await activeTabId());
       return { type: 'LEDGER', summary: tabId === null ? null : getSummary(tabId) };
+    }
+
+    case 'GET_DETAILS': {
+      await hydrate();
+      const tabId = request.tabId ?? sender.tab?.id ?? (await activeTabId());
+      return { type: 'DETAILS', trackers: tabId === null ? [] : getDetails(tabId) };
     }
 
     case 'CLEAR_ALL_DATA':

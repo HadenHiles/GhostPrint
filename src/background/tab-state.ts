@@ -1,7 +1,7 @@
-import { createLedger, recordHit, summarize } from '@/shared/ledger';
+import { createLedger, recordHit, sortedTrackers, summarize } from '@/shared/ledger';
 import type { Observation } from '@/shared/ledger';
 import { dropLedger, loadLedgers, saveLedgers } from '@/shared/storage';
-import type { LedgerSummary, TabLedger } from '@/shared/types';
+import type { LedgerSummary, TabLedger, TrackerDetail } from '@/shared/types';
 import { getEntity } from './classifier';
 
 /**
@@ -36,6 +36,19 @@ export function getLedger(tabId: number): TabLedger | null {
 export function getSummary(tabId: number): LedgerSummary | null {
   const ledger = ledgers.get(tabId);
   return ledger === undefined ? null : summarize(ledger, entityName);
+}
+
+export function getDetails(tabId: number): TrackerDetail[] {
+  const ledger = ledgers.get(tabId);
+  if (ledger === undefined) return [];
+
+  return sortedTrackers(ledger).map((tracker) => ({
+    domain: tracker.domain,
+    entityId: tracker.entityId,
+    entityName: tracker.entityId === null ? null : entityName(tracker.entityId),
+    category: tracker.category,
+    hits: tracker.hits,
+  }));
 }
 
 /** Starts a fresh ledger for a navigation. Returns the ledger so callers can push a reset. */

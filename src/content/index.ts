@@ -1,26 +1,154 @@
+import { GhostCounter } from './ghost-counter';
 import { send } from '@/background/messaging';
+import { readLocal, writeLocal } from '@/shared/storage';
+import type { WidgetAnchor } from '@/shared/storage';
 import { PORT_NAME } from '@/shared/types';
-import type { Push } from '@/shared/types';
+import type { LedgerSummary, Push, TrackerDetail } from '@/shared/types';
 
-/** Marker attribute used by the e2e harness to assert the round trip. */
+/** Marker attribute used by the e2e harness and to prevent double injection. */
 const READY_ATTR = 'data-ghostprint-ready';
 
+const RECONNECT_BASE_MS = 1_000;
+const RECONNECT_MAX_MS = 30_000;
+
+let widget: GhostCounter | null = null;
+let port: chrome.runtime.Port | null = null;
+let reconnectDelay = RECONNECT_BASE_MS;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
 async function boot(): Promise<void> {
-  const pong = await send({ type: 'PING' });
-  document.documentElement.setAttribute(READY_ATTR, String(pong.at));
+  if (!shouldRun()) return;
+
+  const settings = await readLocal();
+  const origin = location.origin;
 
   connect();
+  document.documentElement.setAttribute(READY_ATTR, '1');
+
+  if (!settings.settings.enabled || !settings.settings.showCounter) return;
+  if (settings.mutedOrigins.includes(origin)) return;
+
+  widget = new GhostCounter(
+    {
+      onExpand: async () => {
+        const response = await send({ type: 'GET_DETAILS' });
+        return response.trackers;
+      },
+      onMuteOrigin: () => {
+        void muteOrigin(origin);
+      },
+      onDisable: () => {
+        void disableCounter();
+      },
+    },
+    anchorFor(settings.widgetAnchors, origin),
+  );
+
+  const summary = await send({ type: 'GET_LEDGER' });
+  widget.update(summary.summary);
+}
+
+/**
+ * Skip contexts where the counter is meaningless or unwelcome: sub-frames, the Chrome
+ * Web Store (where Chrome blocks content scripts anyway), and pages with no real origin.
+ */
+function shouldRun(): boolean {
+  if (window.top !== window.self) return false;
+  if (document.documentElement.hasAttribute(READY_ATTR)) return false;
+  if (location.origin === 'null') return false;
+
+  const host = location.hostname;
+  if (host === 'chromewebstore.google.com') return false;
+  if (host === 'chrome.google.com' && location.pathname.startsWith('/webstore')) return false;
+  return true;
 }
 
 function connect(): void {
-  const port = chrome.runtime.connect({ name: PORT_NAME });
+  try {
+    port = chrome.runtime.connect({ name: PORT_NAME });
+  } catch {
+    scheduleReconnect();
+    return;
+  }
+
+  reconnectDelay = RECONNECT_BASE_MS;
+
   port.onMessage.addListener((message: Push) => {
-    void message; // Ghost Counter consumes this in P1-04.
+    if (widget === null) return;
+    if (message.type === 'LEDGER_DELTA') widget.update(message.summary);
+    if (message.type === 'LEDGER_RESET') widget.update(emptySummary(message.tabId));
   });
-  // The MV3 service worker sleeps after ~30s idle; reconnect lazily on demand.
+
   port.onDisconnect.addListener(() => {
     void chrome.runtime.lastError;
+    port = null;
+    scheduleReconnect();
   });
 }
+
+/**
+ * The service worker sleeps after ~30s idle, taking the port with it. Reconnecting with
+ * backoff keeps live updates flowing without spinning when the extension is unloaded.
+ */
+function scheduleReconnect(): void {
+  if (reconnectTimer !== null) return;
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+    if (chrome.runtime.id === undefined) return; // extension unloaded or updated
+    reconnectDelay = Math.min(reconnectDelay * 2, RECONNECT_MAX_MS);
+    connect();
+    void refresh();
+  }, reconnectDelay);
+}
+
+async function refresh(): Promise<void> {
+  if (widget === null) return;
+  try {
+    const response = await send({ type: 'GET_LEDGER' });
+    widget.update(response.summary);
+  } catch {
+    // Service worker unavailable; the next push or reconnect will resync.
+  }
+}
+
+function anchorFor(anchors: Record<string, WidgetAnchor>, origin: string): WidgetAnchor | null {
+  return new Map(Object.entries(anchors)).get(origin) ?? null;
+}
+
+async function muteOrigin(origin: string): Promise<void> {
+  const state = await readLocal();
+  if (!state.mutedOrigins.includes(origin)) {
+    await writeLocal({ mutedOrigins: [...state.mutedOrigins, origin] });
+  }
+  teardown();
+}
+
+async function disableCounter(): Promise<void> {
+  const state = await readLocal();
+  await writeLocal({ settings: { ...state.settings, showCounter: false } });
+  teardown();
+}
+
+function teardown(): void {
+  widget?.destroy();
+  widget = null;
+}
+
+function emptySummary(tabId: number): LedgerSummary {
+  return {
+    tabId,
+    pageDomain: null,
+    total: 0,
+    byCategory: { 0: 0, 1: 0, 2: 0, 3: 0 },
+    topEntity: null,
+    capped: false,
+  };
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') void refresh();
+});
+
+export type { TrackerDetail };
 
 void boot();
