@@ -22,7 +22,7 @@
 | Active task | `P1-06` (performance benchmark harness) |
 | Last updated | 2026-09-28 |
 | Blockers | `P1-01b` and `P1-06` both need a machine where Chromium has network access (unavailable in the current sandbox) |
-| Next up | `P1-06` → `P1-01b` → `P1-07` |
+| Next up | `P1-06` live run → `P1-01b` → `P1-07` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -34,6 +34,8 @@ corporate parent) but not yet high-recall. Recall depends on `P1-01b`.
 **`P1-05` complete.** 141 unit tests, 30 e2e specs, all green across repeated runs.
 **`P1-08` complete.** Privacy policy, threat model, source/manifest audit, and bundled
 egress audit are committed and green.
+**`P1-06` harness complete.** Offline fixture mode passes locally; the live 50-site
+threshold remains pending on the network-enabled performance workflow.
 
 ---
 
@@ -347,7 +349,7 @@ Two refinements over the original plan:
 
 ---
 
-### `P1-06` Performance benchmark harness
+### `P1-06` Performance benchmark harness — **`[~] harness done; live gate pending`**
 **Deps:** `P1-04`
 **Original success criterion:** *Page load ≤ 5% degradation on top 50 domains*
 
@@ -356,7 +358,17 @@ Two refinements over the original plan:
 2. For each of the top 50 domains: 5 runs each, record `LCP`, `DOMContentLoaded`, `loadEventEnd` via the Performance API; discard the slowest run; compare medians.
 3. Emit `bench-results.json` + a markdown table; fail CI (nightly job only, not per-PR) if median degradation > 5% on any domain or > 2% on the aggregate.
 
-**Done when:** the harness runs end-to-end unattended and the current build passes the ≤ 5% / ≤ 2% thresholds.
+**Implementation:** [tools/benchmark.mjs](tools/benchmark.mjs) runs baseline and extension
+treatment in fresh persistent Chromium contexts, takes five measurements per URL, drops
+the slowest run, compares medians, and emits `bench-results.json` plus
+`bench-results.md`. `npm run bench:fixture` proves the runner offline; `npm run bench:required`
+is used by the scheduled/manual [performance workflow](.github/workflows/performance.yml).
+The runner prefers LCP, falls back to FCP or load timing when headless Chromium omits an
+LCP entry, and records the run rather than silently inventing a value.
+
+**Done when:** the harness runs end-to-end unattended and the current build passes the ≤ 5%
+/ ≤ 2% thresholds. ✅ harness execution; ⏳ live top-50 threshold pending because this
+environment's Chromium returns `ERR_NAME_NOT_RESOLVED` for public sites.
 
 ---
 

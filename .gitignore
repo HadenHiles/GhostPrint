@@ -6,4 +6,5 @@ coverage/
 test-results/
 playwright-report/
 bench-results.json
+bench-results.md
 .cache/
