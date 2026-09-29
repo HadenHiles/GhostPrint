@@ -26,7 +26,18 @@ const server = createServer((request, response) => {
     response.end(body);
 });
 
-server.listen(4173, '127.0.0.1');
+const port = Number(process.env.PORT ?? 4173);
+
+server.listen(port, '127.0.0.1', () => {
+    console.log(`GhostPrint sandbox running at http://127.0.0.1:${port}/facebook`);
+    console.log('Press Ctrl-C to stop the sandbox.');
+});
+
+for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.once(signal, () => {
+        server.close(() => process.exit(0));
+    });
+}
 
 function shell(title, body, script = '') {
     return `<!doctype html>
