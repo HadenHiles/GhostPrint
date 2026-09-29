@@ -65,6 +65,9 @@ widget's behavior.
 - X-Ray dimming, outlines, SVG links, and its live-region summary stay inside the closed
   root. The visualization is pointer-transparent, uses only validated ephemeral probe
   observations, and clears its listeners, SVG nodes, and pending animation frame on exit.
+- Weekly reports must use the current aggregate history, which intentionally omits the
+  first-party site associated with tracker observations. Do not reconstruct or persist
+  that association for a share card without a separately reviewed privacy change.
 
 **Verification:** `tests/e2e/widget.spec.ts` asserts the closed root, empty host DOM,
 viewport bounds, fixed-CTA click-through, and no GhostPrint console errors.

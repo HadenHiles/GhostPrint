@@ -23,7 +23,7 @@
 | Active task | P2-05 Viral weekly privacy report |
 | Last updated | 2026-09-29 |
 | Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; they do not block implementation work |
-| Next up | Implement P2-05 local report generation and sharing; mark physical gates with `*` |
+| Next up | Implement P2-05 local report generation and sharing; preserve the no-first-party-history boundary |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -561,6 +561,11 @@ physical checks are unverified.*
 
 ### `P2-05` Viral weekly privacy report
 **Deps:** `P1-05`
+**Privacy boundary:** Current local history deliberately omits which first-party site
+caused tracker observations. Do not add that association without an explicitly approved
+privacy/storage change. Until then, use a top third-party tracker domain as the card
+highlight and redact that label before sharing. The Chrome Web Store share URL is pending
+until a listing exists.
 **Steps**
 1. Weekly `chrome.alarms` job aggregates the local 7-day store into: Most Haunted Website, Top Corporate Stalker, total trackers, estimated value, week-over-week delta.
 2. Render a 1200 × 630 share card **entirely client-side** on an `OffscreenCanvas`; export via `canvas.toBlob()`.
