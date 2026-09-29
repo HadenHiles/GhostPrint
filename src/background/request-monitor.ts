@@ -2,7 +2,7 @@ import { classify, classifyUnknown } from './classifier';
 import { record as recordHistory } from './history';
 import { broadcast } from './messaging';
 import { forgetTab, getSummary, hydrate, record, resetTab } from './tab-state';
-import { getRegistrableDomain, isThirdParty } from '@/shared/domain';
+import { getRegistrableDomain, isThirdPartyHosts, toHostname } from '@/shared/domain';
 import { TrackerCategory } from '@/shared/types';
 
 /**
@@ -18,6 +18,8 @@ import { TrackerCategory } from '@/shared/types';
 const IGNORED_TYPES = new Set<`${chrome.webRequest.ResourceType}`>(['main_frame']);
 
 const BADGE_COLOUR = '#7c3aed';
+const pageHosts = new Map<number, string>();
+const pageDomains = new Map<number, string>();
 
 export function installRequestMonitor(): void {
   void hydrate();
@@ -37,17 +39,24 @@ export function installRequestMonitor(): void {
     // creating a ledger for them would leave empty entries in session storage.
     const pageDomain = getRegistrableDomain(details.url);
     if (pageDomain === null) {
+      pageHosts.delete(details.tabId);
+      pageDomains.delete(details.tabId);
       forgetTab(details.tabId);
       void setBadge(details.tabId, 0);
       return;
     }
 
+  const pageHost = toHostname(details.url);
+  if (pageHost !== null) pageHosts.set(details.tabId, pageHost);
+  pageDomains.set(details.tabId, pageDomain);
     resetTab(details.tabId, pageDomain);
     broadcast({ type: 'LEDGER_RESET', tabId: details.tabId });
     void setBadge(details.tabId, 0);
   });
 
   chrome.tabs.onRemoved.addListener((tabId) => {
+    pageHosts.delete(tabId);
+    pageDomains.delete(tabId);
     forgetTab(tabId);
   });
 
@@ -60,13 +69,19 @@ function handleRequest(details: chrome.webRequest.OnBeforeRequestDetails): void 
 
   // Without an initiator we cannot establish the first party, so we cannot honestly
   // call the request third-party. Skipping is the conservative choice.
+  const pageHost = pageHosts.get(details.tabId);
+  const requestHost = toHostname(details.url);
+  if (requestHost === null) return;
+
   const pageUrl = details.initiator ?? null;
-  if (!isThirdParty(details.url, pageUrl)) return;
+  const resolvedPageHost = pageHost ?? toHostname(pageUrl);
+  if (resolvedPageHost === null) return;
+  if (!isThirdPartyHosts(requestHost, resolvedPageHost)) return;
 
   const classification = classify(details.url) ?? classifyUnknown(details.url);
   if (classification === null) return;
 
-  const pageDomain = getRegistrableDomain(pageUrl);
+  const pageDomain = pageDomains.get(details.tabId) ?? getRegistrableDomain(pageUrl);
   const isNew = record(details.tabId, pageDomain, {
     domain: classification.domain,
     entityId: classification.entityId,

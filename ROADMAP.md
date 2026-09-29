@@ -391,7 +391,10 @@ LCP entry, and records the run rather than silently inventing a value.
 **Measured result:** 47/50 sites completed; 29 exceeded the 5% per-site limit, three
 navigation failures occurred, and the worst measured degradation was 259.44%. Aggregate
 load-event degradation was -9.89%, but the per-site gate fails. This is a product
-performance failure to remediate, not an environment blocker.
+performance failure to remediate, not an environment blocker. The first remediation
+caches first-party host/domain identity per tab and avoids reparsing the initiator URL on
+every subrequest; focused sandbox and tracking tests pass. A clean complete rerun is still
+needed before the gate can change.
 
 **Done when:** the harness runs end-to-end unattended and the current build passes the ≤ 5%
 / ≤ 2% thresholds. ✅ harness execution; ❌ current live performance result.

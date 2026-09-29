@@ -33,6 +33,11 @@ export function isThirdParty(
   const requestHost = toHostname(requestUrl);
   const pageHost = toHostname(pageUrl);
   if (requestHost === null || pageHost === null) return false;
+  return isThirdPartyHosts(requestHost, pageHost);
+}
+
+/** Same-party test when callers already normalized both hostnames. */
+export function isThirdPartyHosts(requestHost: string, pageHost: string): boolean {
   if (requestHost === pageHost) return false;
 
   const request = parse(requestHost, { allowPrivateDomains: true });
