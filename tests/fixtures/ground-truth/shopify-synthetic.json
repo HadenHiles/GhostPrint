@@ -1,34 +1,34 @@
 {
-  "siteId": "shopify-synthetic",
-  "siteUrl": "https://shopify.example/",
-  "platform": "Shopify",
-  "captureType": "synthetic-regression",
-  "labeledBy": "GhostPrint test suite",
-  "labeledAt": "2026-09-28",
-  "requests": [
-    {
-      "url": "https://www.google-analytics.com/collect?v=2",
-      "expectedTracker": true,
-      "expectedCategory": 1,
-      "expectedEntityId": "google"
-    },
-    {
-      "url": "https://static.hotjar.com/c/hotjar-1.js",
-      "expectedTracker": true,
-      "expectedCategory": 2,
-      "expectedEntityId": "contentsquare"
-    },
-    {
-      "url": "https://an-unknown-tracker.example/pixel",
-      "expectedTracker": true
-    },
-    {
-      "url": "https://cdn.jsdelivr.net/npm/shop@1/index.js",
-      "expectedTracker": false
-    },
-    {
-      "url": "https://shopify.example/assets/theme.js",
-      "expectedTracker": false
-    }
-  ]
+    "siteId": "shopify-synthetic",
+    "siteUrl": "https://shopify.example/",
+    "platform": "Shopify",
+    "captureType": "synthetic-regression",
+    "labeledBy": "GhostPrint test suite",
+    "labeledAt": "2026-09-28",
+    "requests": [
+        {
+            "url": "https://www.google-analytics.com/collect?v=2",
+            "expectedTracker": true,
+            "expectedCategory": 1,
+            "expectedEntityId": "google"
+        },
+        {
+            "url": "https://static.hotjar.com/c/hotjar-1.js",
+            "expectedTracker": true,
+            "expectedCategory": 2,
+            "expectedEntityId": "contentsquare"
+        },
+        {
+            "url": "https://an-unknown-tracker.example/pixel",
+            "expectedTracker": true
+        },
+        {
+            "url": "https://cdn.jsdelivr.net/npm/shop@1/index.js",
+            "expectedTracker": false
+        },
+        {
+            "url": "https://shopify.example/assets/theme.js",
+            "expectedTracker": false
+        }
+    ]
 }

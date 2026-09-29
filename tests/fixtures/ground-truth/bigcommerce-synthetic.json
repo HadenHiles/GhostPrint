@@ -1,34 +1,34 @@
 {
-  "siteId": "bigcommerce-synthetic",
-  "siteUrl": "https://bigcommerce.example/",
-  "platform": "BigCommerce",
-  "captureType": "synthetic-regression",
-  "labeledBy": "GhostPrint test suite",
-  "labeledAt": "2026-09-28",
-  "requests": [
-    {
-      "url": "https://www.doubleclick.net/pagead/landing",
-      "expectedTracker": true,
-      "expectedCategory": 0,
-      "expectedEntityId": "google"
-    },
-    {
-      "url": "https://cdn.logrocket.com/LogRocket.min.js",
-      "expectedTracker": true,
-      "expectedCategory": 2,
-      "expectedEntityId": "logrocket"
-    },
-    {
-      "url": "https://d111111abcdef8.cloudfront.net/logo.png",
-      "expectedTracker": false
-    },
-    {
-      "url": "https://bigcommerce.example/assets/product.js",
-      "expectedTracker": false
-    },
-    {
-      "url": "https://www.google.com/recaptcha/api.js",
-      "expectedTracker": false
-    }
-  ]
+    "siteId": "bigcommerce-synthetic",
+    "siteUrl": "https://bigcommerce.example/",
+    "platform": "BigCommerce",
+    "captureType": "synthetic-regression",
+    "labeledBy": "GhostPrint test suite",
+    "labeledAt": "2026-09-28",
+    "requests": [
+        {
+            "url": "https://www.doubleclick.net/pagead/landing",
+            "expectedTracker": true,
+            "expectedCategory": 0,
+            "expectedEntityId": "google"
+        },
+        {
+            "url": "https://cdn.logrocket.com/LogRocket.min.js",
+            "expectedTracker": true,
+            "expectedCategory": 2,
+            "expectedEntityId": "logrocket"
+        },
+        {
+            "url": "https://d111111abcdef8.cloudfront.net/logo.png",
+            "expectedTracker": false
+        },
+        {
+            "url": "https://bigcommerce.example/assets/product.js",
+            "expectedTracker": false
+        },
+        {
+            "url": "https://www.google.com/recaptcha/api.js",
+            "expectedTracker": false
+        }
+    ]
 }
