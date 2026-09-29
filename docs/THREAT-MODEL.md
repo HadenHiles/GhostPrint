@@ -62,6 +62,9 @@ widget's behavior.
 - Host styles are explicitly forced and the widget is not inserted into page content.
 - The widget uses `pointer-events` only for its own controls and relocates around fixed or
   sticky page elements.
+- X-Ray dimming, outlines, SVG links, and its live-region summary stay inside the closed
+  root. The visualization is pointer-transparent, uses only validated ephemeral probe
+  observations, and clears its listeners, SVG nodes, and pending animation frame on exit.
 
 **Verification:** `tests/e2e/widget.spec.ts` asserts the closed root, empty host DOM,
 viewport bounds, fixed-CTA click-through, and no GhostPrint console errors.

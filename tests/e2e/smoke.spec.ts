@@ -15,6 +15,22 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
     .toEqual({ enabled: true, showCounter: true, particleOverlayEnabled: false });
 });
 
+test('registers the X-Ray command and surfaces an unavailable shortcut', async ({ extensionPage }) => {
+  const result = await extensionPage.evaluate(async () => {
+    const commands = await chrome.commands.getAll();
+    const xray = commands.find((command) => command.name === 'toggle-xray');
+    const warning = document.querySelector<HTMLElement>('#xray-warning');
+    return {
+      registered: xray !== undefined,
+      shortcut: xray?.shortcut ?? '',
+      warningHidden: warning?.hidden ?? true,
+    };
+  });
+
+  expect(result.registered).toBe(true);
+  expect(result.warningHidden).toBe(result.shortcut !== '');
+});
+
 test('content script completes a round trip to the service worker', async ({ context }) => {
   await context.route(`${PAGE_URL}**`, (route) =>
     route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>t</title>' }),

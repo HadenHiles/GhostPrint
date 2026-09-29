@@ -177,6 +177,64 @@ test('opted-in particle overlay leaves the page CTA clickable', async ({ context
   await expect(page.locator('#probe-cta')).toHaveAttribute('data-clicked', 'true');
 });
 
+test('X-Ray toggles cleanly, exits on Escape, and never blocks page controls', async ({ context, extensionPage }) => {
+  const page = await openSandbox(context, '/probe');
+  await extensionPage.evaluate(async () => {
+    const stored = await chrome.storage.local.get<{ settings: Record<string, unknown> }>('settings');
+    await chrome.storage.local.set({
+      schemaVersion: 2,
+      settings: { ...stored.settings, particleOverlayEnabled: true },
+    });
+  });
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages.some((message) => message.type === 'GHOSTPRINT_PROBE_EVENT');
+      }),
+    )
+    .toBe(true);
+
+  await page.bringToFront();
+  await extensionPage.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (tab?.id !== undefined) await chrome.tabs.sendMessage(tab.id, { type: 'GHOSTPRINT_TOGGLE_XRAY' });
+  });
+  await expect(page.locator(WIDGET)).toHaveAttribute('data-xray-active', 'true');
+
+  await page.keyboard.press('Escape');
+  await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
+
+  await page.bringToFront();
+  await extensionPage.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (tab?.id === undefined) return;
+    for (let index = 0; index < 20; index += 1) {
+      await chrome.tabs.sendMessage(tab.id, { type: 'GHOSTPRINT_TOGGLE_XRAY' });
+    }
+  });
+  await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
+  await expect(page.locator(WIDGET)).toHaveCount(1);
+  await page.locator('#probe-cta').click();
+  await expect(page.locator('#probe-cta')).toHaveAttribute('data-clicked', 'true');
+});
+
+test('X-Ray resets on SPA history navigation', async ({ context, extensionPage }) => {
+  const page = await openSandbox(context, '/spa');
+  await page.bringToFront();
+  await extensionPage.evaluate(async () => {
+    const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    if (tab?.id !== undefined) await chrome.tabs.sendMessage(tab.id, { type: 'GHOSTPRINT_TOGGLE_XRAY' });
+  });
+  await expect(page.locator(WIDGET)).toHaveAttribute('data-xray-active', 'true');
+
+  await page.locator('#navigate').click();
+  await expect(page.locator('#view')).toHaveText('Next view');
+  await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
+});
+
 test('sandbox checkout CTA remains clickable around the widget', async ({ context }) => {
   const page = await openSandbox(context, '/shopify');
   await expect(page.locator(WIDGET)).toBeAttached();

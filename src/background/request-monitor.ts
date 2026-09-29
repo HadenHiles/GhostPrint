@@ -54,6 +54,13 @@ export function installRequestMonitor(): void {
     void setBadge(details.tabId, 0);
   });
 
+  chrome.webNavigation.onHistoryStateUpdated.addListener((details) => {
+    if (details.frameId !== 0 || !details.url.startsWith('http')) return;
+    void chrome.tabs.sendMessage(details.tabId, { type: 'GHOSTPRINT_RESET_XRAY' }).catch(() => {
+      // Navigation may race content-script injection or tab closure.
+    });
+  });
+
   chrome.tabs.onRemoved.addListener((tabId) => {
     pageHosts.delete(tabId);
     pageDomains.delete(tabId);

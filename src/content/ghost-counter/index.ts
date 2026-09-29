@@ -1,5 +1,6 @@
 import { anchorStyle, pickAnchor } from './anchor';
 import { ParticleOverlay } from './particle-overlay';
+import { XRayOverlay } from './xray-overlay';
 import { WIDGET_CSS } from './styles';
 import { TrackerCategory } from '@/shared/types';
 import type { ProbeObservation } from '../probes';
@@ -31,6 +32,7 @@ export interface WidgetCallbacks {
   onExpand: () => Promise<TrackerDetail[]>;
   onMuteOrigin: () => void;
   onDisable: () => void;
+  onXrayExit: () => void;
 }
 
 export class GhostCounter {
@@ -38,6 +40,7 @@ export class GhostCounter {
   private readonly root: ShadowRoot;
   private readonly container: HTMLDivElement;
   private readonly particles: ParticleOverlay;
+  private readonly xray: XRayOverlay;
   private readonly callbacks: WidgetCallbacks;
 
   private summary: LedgerSummary | null = null;
@@ -72,6 +75,7 @@ export class GhostCounter {
     this.container.className = 'root';
     this.root.appendChild(this.container);
     this.container.hidden = !showCounter;
+    this.xray = new XRayOverlay(this.root, callbacks.onXrayExit);
 
     this.anchor = pickAnchor(this.host, preferredAnchor);
     this.applyHostStyle();
@@ -92,6 +96,7 @@ export class GhostCounter {
   destroy(): void {
     if (this.resizeHandler !== null) window.removeEventListener('resize', this.resizeHandler);
     this.particles.destroy();
+    this.xray.destroy();
     this.host.remove();
   }
 
@@ -105,6 +110,16 @@ export class GhostCounter {
 
   showProbeObservation(observation: ProbeObservation): void {
     this.particles.show(observation);
+  }
+
+  setXrayEnabled(enabled: boolean, observations: ProbeObservation[]): void {
+    if (enabled) this.host.setAttribute('data-xray-active', 'true');
+    else this.host.removeAttribute('data-xray-active');
+    this.xray.setEnabled(enabled, observations);
+  }
+
+  updateXrayObservations(observations: ProbeObservation[]): void {
+    this.xray.update(observations);
   }
 
   /**

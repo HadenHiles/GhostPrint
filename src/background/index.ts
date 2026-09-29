@@ -20,6 +20,11 @@ chrome.runtime.onInstalled.addListener(() => {
 installRequestMonitor();
 installHistory();
 
+chrome.commands.onCommand.addListener((command) => {
+  if (command !== 'toggle-xray') return;
+  void sendXrayMessageToActiveTab('GHOSTPRINT_TOGGLE_XRAY');
+});
+
 installRouter(async (request: Request, sender) => {
   switch (request.type) {
     case 'PING':
@@ -78,4 +83,14 @@ async function activeTabId(): Promise<number | null> {
 
 function isPageTab(tab: chrome.tabs.Tab): boolean {
   return tab.url?.startsWith('http') === true;
+}
+
+async function sendXrayMessageToActiveTab(type: 'GHOSTPRINT_TOGGLE_XRAY'): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  if (tab?.id === undefined || !isPageTab(tab)) return;
+  try {
+    await chrome.tabs.sendMessage(tab.id, { type });
+  } catch {
+    // The tab may not have a content script if navigation/injection is still in flight.
+  }
 }

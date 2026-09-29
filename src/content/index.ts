@@ -5,6 +5,7 @@ import { readLocal, writeLocal } from '@/shared/storage';
 import type { LocalSchema, WidgetAnchor } from '@/shared/storage';
 import { PORT_NAME } from '@/shared/types';
 import type { LedgerSummary, Push, TrackerDetail } from '@/shared/types';
+import type { ProbeObservation } from './probes';
 
 /** Marker attribute used by the e2e harness and to prevent double injection. */
 const READY_ATTR = 'data-ghostprint-ready';
@@ -18,6 +19,9 @@ let reconnectDelay = RECONNECT_BASE_MS;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let stopProbeBridge: (() => void) | null = null;
 let unsubscribeProbe: (() => void) | null = null;
+let particleOverlayEnabled = false;
+let xrayEnabled = false;
+const probeObservations = new Map<string, ProbeObservation>();
 
 async function boot(): Promise<void> {
   if (!shouldRun()) return;
@@ -34,11 +38,12 @@ function applySettings(settings: LocalSchema): void {
     return;
   }
 
+  particleOverlayEnabled = settings.settings.particleOverlayEnabled;
   if (port === null) connect();
-  if (settings.settings.particleOverlayEnabled) startProbes();
+  if (particleOverlayEnabled || xrayEnabled) startProbes();
   else stopProbes();
 
-  const needsHost = settings.settings.showCounter || settings.settings.particleOverlayEnabled;
+  const needsHost = settings.settings.showCounter || particleOverlayEnabled || xrayEnabled;
   if (!needsHost) {
     destroyWidget();
     return;
@@ -57,6 +62,7 @@ function applySettings(settings: LocalSchema): void {
         onDisable: () => {
           void disableCounter();
         },
+        onXrayExit: resetXray,
       },
       anchorFor(settings.widgetAnchors, origin),
       settings.settings.showCounter,
@@ -64,7 +70,8 @@ function applySettings(settings: LocalSchema): void {
   } else {
     widget.setCounterVisible(settings.settings.showCounter);
   }
-  widget.setOverlayEnabled(settings.settings.particleOverlayEnabled);
+  widget.setOverlayEnabled(particleOverlayEnabled);
+  widget.setXrayEnabled(xrayEnabled, [...probeObservations.values()]);
 
   if (settings.settings.showCounter) {
     void send({ type: 'GET_LEDGER' }).then((summary) => widget?.update(summary.summary));
@@ -148,6 +155,7 @@ async function muteOrigin(origin: string): Promise<void> {
 
 async function disableCounter(): Promise<void> {
   const state = await readLocal();
+  xrayEnabled = false;
   await writeLocal({
     settings: { ...state.settings, showCounter: false, particleOverlayEnabled: false },
   });
@@ -155,6 +163,8 @@ async function disableCounter(): Promise<void> {
 }
 
 function teardown(): void {
+  xrayEnabled = false;
+  particleOverlayEnabled = false;
   stopProbes();
   destroyWidget();
 }
@@ -163,7 +173,14 @@ function startProbes(): void {
   if (stopProbeBridge !== null) return;
   stopProbeBridge = startProbeBridge();
   unsubscribeProbe = subscribeToProbeObservations((observation) => {
+    const key = `${observation.domain}\u0000${observation.selector ?? ''}`;
+    if (!probeObservations.has(key) && probeObservations.size >= 64) {
+      const oldestKey = probeObservations.keys().next().value;
+      if (oldestKey !== undefined) probeObservations.delete(oldestKey);
+    }
+    probeObservations.set(key, observation);
     widget?.showProbeObservation(observation);
+    widget?.updateXrayObservations([...probeObservations.values()]);
   });
 }
 
@@ -172,6 +189,22 @@ function stopProbes(): void {
   unsubscribeProbe = null;
   stopProbeBridge?.();
   stopProbeBridge = null;
+  probeObservations.clear();
+}
+
+function toggleXray(): void {
+  xrayEnabled = !xrayEnabled;
+  if (xrayEnabled) startProbes();
+  else if (!particleOverlayEnabled) stopProbes();
+  void readLocal().then(applySettings);
+}
+
+function resetXray(): void {
+  if (!xrayEnabled) return;
+  xrayEnabled = false;
+  widget?.setXrayEnabled(false, []);
+  if (!particleOverlayEnabled) stopProbes();
+  void readLocal().then(applySettings);
 }
 
 function destroyWidget(): void {
@@ -201,6 +234,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   ) {
     void readLocal().then(applySettings);
   }
+});
+
+chrome.runtime.onMessage.addListener((message: unknown) => {
+  if (typeof message !== 'object' || message === null || !('type' in message)) return;
+  if (message.type === 'GHOSTPRINT_TOGGLE_XRAY') toggleXray();
+  if (message.type === 'GHOSTPRINT_RESET_XRAY') resetXray();
 });
 
 export type { TrackerDetail };

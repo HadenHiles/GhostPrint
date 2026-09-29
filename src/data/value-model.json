@@ -1,68 +1,68 @@
 {
-  "version": "2026-09-29",
-  "currency": "USD",
-  "baseCpmUsd": {
-    "value": 1.5,
-    "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-    "retrievedAt": "2026-09-29",
-    "scope": "Tunnl states $1.50 CPM for programmatic display and most DSPs; this is a provider-specific data-usage fee, not a universal market rate."
-  },
-  "categoryWeights": {
-    "advertising": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+    "version": "2026-09-29",
+    "currency": "USD",
+    "baseCpmUsd": {
+        "value": 1.5,
+        "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+        "retrievedAt": "2026-09-29",
+        "scope": "Tunnl states $1.50 CPM for programmatic display and most DSPs; this is a provider-specific data-usage fee, not a universal market rate."
     },
-    "analytics": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+    "categoryWeights": {
+        "advertising": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+        },
+        "analytics": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+        },
+        "behavioral": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+        },
+        "unknown": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+        }
     },
-    "behavioral": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
-    },
-    "unknown": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; the cited provider does not publish a category-specific fee schedule."
+    "verticalMultipliers": {
+        "general": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral fallback; the cited provider does not publish a page-vertical rate schedule."
+        },
+        "finance": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; no finance-specific fee was published."
+        },
+        "health": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; no health-specific fee was published."
+        },
+        "ecommerce": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; no e-commerce-specific fee was published."
+        },
+        "news": {
+            "value": 1,
+            "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
+            "retrievedAt": "2026-09-29",
+            "scope": "Neutral allocation; no news-specific fee was published."
+        }
     }
-  },
-  "verticalMultipliers": {
-    "general": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral fallback; the cited provider does not publish a page-vertical rate schedule."
-    },
-    "finance": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; no finance-specific fee was published."
-    },
-    "health": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; no health-specific fee was published."
-    },
-    "ecommerce": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; no e-commerce-specific fee was published."
-    },
-    "news": {
-      "value": 1,
-      "source": "https://www.tunnldata.com/blog/third-party-audience-data-usage-fees",
-      "retrievedAt": "2026-09-29",
-      "scope": "Neutral allocation; no news-specific fee was published."
-    }
-  }
 }

@@ -16,7 +16,7 @@ export const WIDGET_CSS = `
 
 .root {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   --bg: #12121a;
   --fg: #e9e9f2;
   --muted: #9292a8;
@@ -42,6 +42,22 @@ export const WIDGET_CSS = `
   height: 100vh;
   pointer-events: none;
 }
+
+.xray-layer {
+  position: fixed;
+  z-index: 2;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.xray-layer[hidden] { display: none !important; }
+.xray-dimmer { position: absolute; inset: 0; background: rgb(6 10 18 / 62%); }
+.xray-map { position: absolute; inset: 0; overflow: visible; }
+.xray-outline { fill: none; stroke-width: 2; vector-effect: non-scaling-stroke; }
+.xray-line { fill: none; stroke-width: 1.5; opacity: 0.88; vector-effect: non-scaling-stroke; }
+.xray-label { fill: #fff; font: 11px/1.2 system-ui, sans-serif; paint-order: stroke; stroke: #10131a; stroke-width: 3px; stroke-linejoin: round; }
+.xray-status { position: absolute; left: 16px; bottom: 16px; max-width: min(440px, calc(100vw - 32px)); padding: 8px 10px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 6px; background: #10131a; color: #f4f7ff; font-size: 12px; line-height: 1.4; }
 
 @media (prefers-color-scheme: light) {
   .root {

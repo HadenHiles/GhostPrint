@@ -20,10 +20,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-04 X-Ray Vision hotkey |
+| Active task | P2-05 Viral weekly privacy report |
 | Last updated | 2026-09-29 |
 | Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; they do not block implementation work |
-| Next up | Implement P2-04 hotkey, accessible X-Ray overlay, and cleanup lifecycle |
+| Next up | Implement P2-05 local report generation and sharing; mark physical gates with `*` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -539,8 +539,15 @@ data value.
 
 ---
 
-### `P2-04` X-Ray Vision hotkey
+### `P2-04` X-Ray Vision hotkey — **`[x]*` implementation complete; browser shortcut and heap gates unverified**
 **Deps:** `P2-01`, `P2-02`
+**Implementation:** The registered command targets the active tab; the X-Ray layer dims
+the page, outlines up to 64 observed targets, draws category-colored SVG curves to
+domain labels grouped by corporate parent, announces a live summary, exits on Escape,
+and resets on SPA history navigation. Shortcut collision warning, direct toggle, repeat
+cleanup, click-through, and SPA reset have automated coverage. Playwright could not
+trigger Chrome's browser-level shortcut event, and a heap snapshot was not taken; these
+physical checks are unverified.*
 **Steps**
 1. Register `commands` entry `toggle-xray` → `Ctrl+Shift+X` / `Cmd+Shift+X`; handle collisions gracefully (Chrome silently drops conflicting bindings — detect via `chrome.commands.getAll()` and surface a warning in options).
 2. On toggle: dim the page with a shadow-root overlay, outline instrumented elements, and draw SVG bezier lines from each element to a labeled node representing the third-party domain.
