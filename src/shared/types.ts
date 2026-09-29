@@ -98,12 +98,26 @@ export interface HistorySummary {
   topEntities: EntityCount[];
 }
 
+/** Privacy-safe weekly share summary; contains no first-party site or full URL. */
+export interface WeeklyReport {
+  weekStarting: string;
+  weekEnding: string;
+  totalTrackers: number;
+  previousTotal: number;
+  deltaCount: number;
+  deltaPercent: number | null;
+  topTrackerDomain: string | null;
+  topEntityName: string | null;
+  estimatedValue: number;
+}
+
 /** Requests initiated by content script / popup / options, answered by the SW. */
 export type Request =
   | { type: 'PING' }
   | { type: 'GET_LEDGER'; tabId?: number }
   | { type: 'GET_DETAILS'; tabId?: number }
   | { type: 'GET_HISTORY'; days?: number }
+  | { type: 'GET_WEEKLY_REPORT' }
   | { type: 'CLEAR_ALL_DATA' };
 
 export type ResponseFor<R extends Request> = R extends { type: 'PING' }
@@ -114,8 +128,10 @@ export type ResponseFor<R extends Request> = R extends { type: 'PING' }
       ? { type: 'DETAILS'; trackers: TrackerDetail[] }
       : R extends { type: 'GET_HISTORY' }
         ? { type: 'HISTORY'; summary: HistorySummary }
-        : R extends { type: 'CLEAR_ALL_DATA' }
-          ? { type: 'CLEARED' }
+          : R extends { type: 'GET_WEEKLY_REPORT' }
+            ? { type: 'WEEKLY_REPORT'; report: WeeklyReport }
+            : R extends { type: 'CLEAR_ALL_DATA' }
+              ? { type: 'CLEARED' }
           : never;
 
 /** Pushed from the SW to connected ports. */

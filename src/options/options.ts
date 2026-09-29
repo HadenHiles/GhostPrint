@@ -3,16 +3,24 @@ import { readLocal, writeLocal } from '@/shared/storage';
 
 const enabled = document.querySelector<HTMLInputElement>('#enabled');
 const showCounter = document.querySelector<HTMLInputElement>('#showCounter');
+const weeklyReportNotification = document.querySelector<HTMLInputElement>('#weekly-report-notification');
 const clear = document.querySelector<HTMLButtonElement>('#clear');
 const cleared = document.querySelector<HTMLParagraphElement>('#cleared');
 const xrayWarning = document.querySelector<HTMLParagraphElement>('#xray-warning');
 
 void (async () => {
-  if (enabled === null || showCounter === null || clear === null || cleared === null) return;
+  if (
+    enabled === null ||
+    showCounter === null ||
+    weeklyReportNotification === null ||
+    clear === null ||
+    cleared === null
+  ) return;
 
   const state = await readLocal();
   enabled.checked = state.settings.enabled;
   showCounter.checked = state.settings.showCounter;
+  weeklyReportNotification.checked = state.settings.weeklyReportNotificationEnabled;
 
   const persist = async () => {
     const current = await readLocal();
@@ -21,12 +29,14 @@ void (async () => {
         ...current.settings,
         enabled: enabled.checked,
         showCounter: showCounter.checked,
+        weeklyReportNotificationEnabled: weeklyReportNotification.checked,
       },
     });
   };
 
   enabled.addEventListener('change', () => void persist());
   showCounter.addEventListener('change', () => void persist());
+  weeklyReportNotification.addEventListener('change', () => void persist());
 
   if (xrayWarning !== null) {
     void chrome.commands.getAll().then((commands) => {

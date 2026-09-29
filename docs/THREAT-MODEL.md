@@ -68,6 +68,9 @@ widget's behavior.
 - Weekly reports must use the current aggregate history, which intentionally omits the
   first-party site associated with tracker observations. Do not reconstruct or persist
   that association for a share card without a separately reviewed privacy change.
+- The report card is rendered locally, contains only aggregate counts and a third-party
+  tracker label, supports redaction before sharing, and has no upload path. Its
+  notification is default-off and contains no browsing details.
 
 **Verification:** `tests/e2e/widget.spec.ts` asserts the closed root, empty host DOM,
 viewport bounds, fixed-CTA click-through, and no GhostPrint console errors.

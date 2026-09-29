@@ -14,6 +14,7 @@ describe('local storage migration', () => {
       enabled: false,
       showCounter: true,
       particleOverlayEnabled: false,
+      weeklyReportNotificationEnabled: false,
     });
     expect(migrated.mutedOrigins).toEqual(['https://example.com']);
   });
@@ -21,5 +22,20 @@ describe('local storage migration', () => {
   it('defaults the overlay off on a fresh install', () => {
     expect(migrate({}).settings.particleOverlayEnabled).toBe(false);
     expect(DEFAULT_LOCAL.settings.particleOverlayEnabled).toBe(false);
+    expect(DEFAULT_LOCAL.settings.weeklyReportNotificationEnabled).toBe(false);
+  });
+
+  it('adds the notification preference to existing v2 settings', () => {
+    const migrated = migrate({
+      schemaVersion: 2,
+      settings: { enabled: true, showCounter: false, particleOverlayEnabled: true },
+    });
+
+    expect(migrated.settings).toEqual({
+      enabled: true,
+      showCounter: false,
+      particleOverlayEnabled: true,
+      weeklyReportNotificationEnabled: false,
+    });
   });
 });

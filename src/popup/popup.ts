@@ -3,7 +3,9 @@ import { readLocal, writeLocal } from '@/shared/storage';
 import { estimateValue } from '@/shared/value';
 import { TrackerCategory } from '@/shared/types';
 import type { CategoryTotals, HistorySummary, LedgerSummary } from '@/shared/types';
+import { buildShareText, renderWeeklyCard } from './weekly-card';
 
+import type { WeeklyReport } from '@/shared/types';
 const CATEGORY_ROWS: [TrackerCategory, string][] = [
   [TrackerCategory.Advertising, 'Advertising'],
   [TrackerCategory.Analytics, 'Analytics'],
@@ -30,6 +32,16 @@ const clearButton = el<HTMLButtonElement>('clear');
 const particleOverlay = el<HTMLInputElement>('particle-overlay');
 const valueAmount = el('value-amount');
 
+const reportSummary = el('report-summary');
+const reportRedact = el<HTMLInputElement>('report-redact');
+const reportPreview = el<HTMLImageElement>('report-preview');
+const reportStatus = el('report-status');
+const reportDownload = el<HTMLButtonElement>('report-download');
+const reportCopy = el<HTMLButtonElement>('report-copy');
+const reportShare = el<HTMLButtonElement>('report-share');
+let weeklyReport: WeeklyReport | null = null;
+let reportBlob: Blob | null = null;
+let previewUrl: string | null = null;
 function categoryEntries(totals: CategoryTotals): [TrackerCategory, string, number][] {
   const values = new Map<TrackerCategory, number>([
     [TrackerCategory.Advertising, totals[TrackerCategory.Advertising]],
@@ -130,10 +142,11 @@ function renderHistory(summary: HistorySummary): void {
 
 async function load(): Promise<void> {
   try {
-    const [ledger, history, details, local] = await Promise.all([
+    const [ledger, history, details, report, local] = await Promise.all([
       send({ type: 'GET_LEDGER' }),
       send({ type: 'GET_HISTORY' }),
       send({ type: 'GET_DETAILS' }),
+      send({ type: 'GET_WEEKLY_REPORT' }),
       readLocal(),
     ]);
     renderPage(ledger.summary);
@@ -145,8 +158,11 @@ async function load(): Promise<void> {
       minimumFractionDigits: 3,
       maximumFractionDigits: 4,
     }).format(value.amount);
+    weeklyReport = report.report;
+    renderWeeklySummary(weeklyReport);
     particleOverlay.checked = local.settings.particleOverlayEnabled;
     document.body.dataset.ghostprintLoaded = 'true';
+    void updateReportCard();
   } catch {
     status.textContent = 'Unavailable';
   }
@@ -160,6 +176,81 @@ particleOverlay.addEventListener('change', () => {
     });
   })();
 });
+
+reportRedact.addEventListener('change', () => void updateReportCard());
+
+reportDownload.addEventListener('click', () => {
+  if (reportBlob === null) return;
+  const url = URL.createObjectURL(reportBlob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'ghostprint-weekly-report.png';
+  link.click();
+  URL.revokeObjectURL(url);
+  reportStatus.textContent = 'Report downloaded.';
+});
+
+reportCopy.addEventListener('click', () => {
+  void (async () => {
+    if (reportBlob === null) return;
+    if (!('ClipboardItem' in window) || !navigator.clipboard?.write) {
+      reportStatus.textContent = 'Image copy is not available in this browser.';
+      return;
+    }
+    const writeItems = navigator.clipboard.write.bind(navigator.clipboard);
+    await writeItems([new ClipboardItem({ 'image/png': reportBlob })]);
+    reportStatus.textContent = 'Report image copied.';
+  })().catch(() => {
+    reportStatus.textContent = 'Could not copy the report image.';
+  });
+});
+
+reportShare.addEventListener('click', () => {
+  void (async () => {
+    if (reportBlob === null || weeklyReport === null) return;
+    const file = new File([reportBlob], 'ghostprint-weekly-report.png', { type: 'image/png' });
+    const text = buildShareText(weeklyReport, reportRedact.checked);
+    if (navigator.canShare?.({ files: [file] }) && navigator.share) {
+      await navigator.share({ title: 'GhostPrint weekly privacy report', text, files: [file] });
+      reportStatus.textContent = 'Share sheet opened.';
+    } else if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      reportStatus.textContent = 'Share text copied; image sharing is unavailable here.';
+    } else {
+      reportStatus.textContent = 'Sharing is unavailable in this browser.';
+    }
+  })().catch(() => {
+    reportStatus.textContent = 'Sharing was cancelled or unavailable.';
+  });
+});
+
+function renderWeeklySummary(report: WeeklyReport): void {
+  const delta = report.deltaPercent === null
+    ? `${report.deltaCount >= 0 ? '+' : ''}${report.deltaCount} encounters`
+    : `${report.deltaPercent >= 0 ? '+' : ''}${Math.round(report.deltaPercent)}%`;
+  reportSummary.textContent = `${report.totalTrackers} tracker encounters · ${delta} vs. previous week`;
+}
+
+async function updateReportCard(): Promise<void> {
+  if (weeklyReport === null) return;
+  reportDownload.disabled = true;
+  reportCopy.disabled = true;
+  reportShare.disabled = true;
+  reportStatus.textContent = 'Preparing report…';
+  try {
+    reportBlob = await renderWeeklyCard(weeklyReport, reportRedact.checked);
+    if (previewUrl !== null) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(reportBlob);
+    reportPreview.src = previewUrl;
+    reportPreview.hidden = false;
+    reportDownload.disabled = false;
+    reportCopy.disabled = false;
+    reportShare.disabled = false;
+    reportStatus.textContent = '';
+  } catch {
+    reportStatus.textContent = 'Could not render the weekly report on this browser.';
+  }
+}
 
 el('options').addEventListener('click', () => {
   void chrome.runtime.openOptionsPage();

@@ -57,6 +57,7 @@ function isRequest(value: unknown): value is Request {
     type === 'GET_LEDGER' ||
     type === 'GET_DETAILS' ||
     type === 'GET_HISTORY' ||
+    type === 'GET_WEEKLY_REPORT' ||
     type === 'CLEAR_ALL_DATA'
   );
 }

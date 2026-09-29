@@ -62,6 +62,7 @@ const expectedPermissions = [
     'declarativeNetRequestFeedback',
     'webNavigation',
     'alarms',
+    'notifications',
 ];
 for (const permission of expectedPermissions) {
     if (!manifest.permissions.includes(permission)) {

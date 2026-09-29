@@ -52,11 +52,23 @@ The history does not preserve which first-party site caused an observation. It c
 full URLs, titles, visit times, identifiers, or browsing sequence. The popup uses this
 aggregate to show the local seven-day summary.
 
+The local `weeklyReport` value is replaced when the weekly alarm runs. It contains only
+the seven-day date range, tracker encounter totals, prior-week comparison, top
+third-party tracker domain, corporate parent, and fee-equivalent estimate. It does not
+contain the first-party site associated with any tracker observation. **Clear data**
+deletes this report.
+
 ### Settings
 
-Settings include whether detection, the counter, and the default-off particle overlay are
-enabled, muted origins, and an optional per-origin widget anchor. These remain on the
-device.
+Settings include whether detection, the counter, the default-off particle overlay, and
+default-off weekly report notifications are enabled, muted origins, and an optional
+per-origin widget anchor. These remain on the device.
+
+The weekly report is computed from existing aggregate history. It does not retain which
+first-party site caused a tracker observation; its highlight is a third-party tracker
+domain. The PNG is generated locally and is never uploaded. The user can redact the
+tracker-domain label before sharing. When explicitly enabled, the local notification
+only says the report is ready and contains no browsing details.
 
 ## Data deletion
 

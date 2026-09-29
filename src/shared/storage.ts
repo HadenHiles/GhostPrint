@@ -1,6 +1,6 @@
 import type { TabLedger } from './types';
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export interface LocalSchema {
   schemaVersion: number;
@@ -15,13 +15,19 @@ export interface Settings {
   enabled: boolean;
   showCounter: boolean;
   particleOverlayEnabled: boolean;
+  weeklyReportNotificationEnabled: boolean;
 }
 
 export type WidgetAnchor = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export const DEFAULT_LOCAL: LocalSchema = {
   schemaVersion: SCHEMA_VERSION,
-  settings: { enabled: true, showCounter: true, particleOverlayEnabled: false },
+  settings: {
+    enabled: true,
+    showCounter: true,
+    particleOverlayEnabled: false,
+    weeklyReportNotificationEnabled: false,
+  },
   widgetAnchors: {},
   mutedOrigins: [],
 };
@@ -50,12 +56,7 @@ export function migrate(
       // Fresh install or pre-versioned data: fall through to defaults.
       return { ...DEFAULT_LOCAL };
     case 1:
-      return {
-        ...DEFAULT_LOCAL,
-        ...raw,
-        settings: { ...DEFAULT_LOCAL.settings, ...raw.settings },
-        schemaVersion: SCHEMA_VERSION,
-      };
+    case 2:
     case SCHEMA_VERSION:
       return {
         ...DEFAULT_LOCAL,

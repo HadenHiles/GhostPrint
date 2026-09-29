@@ -146,7 +146,7 @@ test('clear data empties storage and resets the view', async ({
   expect(after.mutedOrigins).toEqual([]);
   expect(after.ledgerKeys).toBe(0);
   // Defaults are restored rather than leaving the extension in an unconfigured state.
-  expect(after.schemaVersion).toBe(2);
+  expect(after.schemaVersion).toBe(3);
 
   await expect(popup.locator('#week-total')).toHaveText('0');
 });
@@ -213,4 +213,23 @@ test('shows the fee-equivalent estimate with a persistent disclaimer and methodo
   await options.goto(`chrome-extension://${extensionId}/options/index.html#value-model`);
   await expect(options.locator('#value-model')).toBeVisible();
   await expect(options.getByText(/Legal review of this wording has not been completed/)).toBeVisible();
+});
+
+test('renders and redacts the local weekly share card', async ({ context, extensionId, extensionPage }) => {
+  await browseShop(context, extensionPage);
+  const popup = await openPopup(context, extensionId);
+  const preview = popup.locator('#report-preview');
+  await expect(preview).toBeVisible();
+  await expect.poll(() => preview.evaluate((image: HTMLImageElement) => [image.naturalWidth, image.naturalHeight]))
+    .toEqual([1200, 630]);
+
+  const firstPreview = await preview.getAttribute('src');
+  await popup.locator('#report-redact').check();
+  await expect.poll(() => preview.getAttribute('src')).not.toBe(firstPreview);
+
+  const [download] = await Promise.all([
+    popup.waitForEvent('download'),
+    popup.locator('#report-download').click(),
+  ]);
+  expect(download.suggestedFilename()).toBe('ghostprint-weekly-report.png');
 });

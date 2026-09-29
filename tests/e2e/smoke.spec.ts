@@ -8,11 +8,21 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
       () =>
         serviceWorker.evaluate(async () => {
           const { settings } = await chrome.storage.local.get('settings');
-          return settings as { enabled: boolean; showCounter: boolean; particleOverlayEnabled: boolean } | undefined;
+          return settings as {
+            enabled: boolean;
+            showCounter: boolean;
+            particleOverlayEnabled: boolean;
+            weeklyReportNotificationEnabled: boolean;
+          } | undefined;
         }),
       { timeout: 10_000 },
     )
-    .toEqual({ enabled: true, showCounter: true, particleOverlayEnabled: false });
+    .toEqual({
+      enabled: true,
+      showCounter: true,
+      particleOverlayEnabled: false,
+      weeklyReportNotificationEnabled: false,
+    });
 });
 
 test('registers the X-Ray command and surfaces an unavailable shortcut', async ({ extensionPage }) => {
@@ -62,4 +72,27 @@ test('options page clears all local data', async ({ context, extensionId, servic
     async () => (await chrome.storage.local.get('mutedOrigins')).mutedOrigins as string[],
   );
   expect(muted).toEqual([]);
+});
+
+test('weekly report notifications are opt-in and persist from Options', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options/index.html`);
+  const toggle = options.locator('#weekly-report-notification');
+  await expect(toggle).not.toBeChecked();
+  await toggle.check();
+
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const local = await chrome.storage.local.get<{
+          settings?: { weeklyReportNotificationEnabled?: boolean };
+        }>('settings');
+        return local.settings?.weeklyReportNotificationEnabled;
+      }),
+    )
+    .toBe(true);
 });

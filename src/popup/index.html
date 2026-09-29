@@ -161,6 +161,25 @@
             font-size: 11px;
         }
 
+        #report-preview {
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1200 / 630;
+            margin-top: 8px;
+            border: 1px solid var(--line);
+            background: #101820;
+        }
+
+        .report-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .report-actions button { min-height: 28px; }
+
         .setting-row {
             display: flex;
             align-items: center;
@@ -276,6 +295,19 @@
 
     <section aria-label="Visual effects">
         <label class="setting-row"><input type="checkbox" id="particle-overlay" /> Show probe effects</label>
+    </section>
+
+    <section aria-labelledby="report-heading">
+        <h2 id="report-heading">Weekly privacy report</h2>
+        <p id="report-summary" class="muted"></p>
+        <label class="setting-row"><input type="checkbox" id="report-redact" /> Redact tracker domain</label>
+        <img id="report-preview" alt="Preview of your local weekly privacy report" hidden />
+        <div class="report-actions">
+            <button id="report-download" type="button">Download PNG</button>
+            <button id="report-copy" type="button">Copy image</button>
+            <button id="report-share" type="button">Share</button>
+        </div>
+        <p id="report-status" class="muted" role="status"></p>
     </section>
 
     <footer>

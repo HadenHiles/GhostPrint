@@ -20,10 +20,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-05 Viral weekly privacy report |
+| Active task | P2-06 Attribution & organic loop measurement |
 | Last updated | 2026-09-29 |
-| Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; they do not block implementation work |
-| Next up | Implement P2-05 local report generation and sharing; preserve the no-first-party-history boundary |
+| Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; P2-06 egress needs a separate opt-in consent design |
+| Next up | Define P2-06 opt-in consent and telemetry data flow before any egress implementation |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -559,16 +559,23 @@ physical checks are unverified.*
 
 ---
 
-### `P2-05` Viral weekly privacy report
+### `P2-05` Viral weekly privacy report — **`[x]*` implementation complete; physical release checks unverified**
 **Deps:** `P1-05`
 **Privacy boundary:** Current local history deliberately omits which first-party site
 caused tracker observations. Do not add that association without an explicitly approved
 privacy/storage change. Until then, use a top third-party tracker domain as the card
 highlight and redact that label before sharing. The Chrome Web Store share URL is pending
 until a listing exists.
+**Implementation:** A weekly alarm persists a replace-on-generation privacy-safe report.
+The popup renders a 1200×630 local OffscreenCanvas card with Download, Copy image, Share,
+and domain redaction controls. A default-off notification contains no browsing details.
+Unit and e2e tests cover aggregate math, redaction, rendered dimensions, download, and
+notification opt-in. Notification delivery, clipboard/Web Share platform behavior,
+sub-500 ms rendering, social-card preview rendering, and the future Web Store URL were
+not physically verified.*
 **Steps**
-1. Weekly `chrome.alarms` job aggregates the local 7-day store into: Most Haunted Website, Top Corporate Stalker, total trackers, estimated value, week-over-week delta.
-2. Render a 1200 × 630 share card **entirely client-side** on an `OffscreenCanvas`; export via `canvas.toBlob()`.
+1. Weekly `chrome.alarms` job aggregates the local 7-day store into: top third-party tracker domain, Top Corporate Stalker, total trackers, estimated fee-equivalent, and week-over-week delta. The top first-party site is not available without changing the privacy-preserving history schema.
+2. Render a 1200 × 630 share card **entirely client-side** on an `OffscreenCanvas`; export via `convertToBlob()`.
 3. Share actions: Download PNG, Copy to clipboard, and Web Share API where available. **No server upload.** Share text includes a Chrome Web Store link with a UTM campaign parameter.
 4. Notification (opt-in, via `chrome.notifications`) when the report is ready; hard cap of one per week; user can disable.
 5. The card must never contain a full URL or anything user-identifying beyond a domain name — and the preview must let the user redact the site name before sharing.

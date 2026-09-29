@@ -11,7 +11,8 @@
         "declarativeNetRequest",
         "declarativeNetRequestFeedback",
         "webNavigation",
-        "alarms"
+        "alarms",
+        "notifications"
     ],
     "host_permissions": [
         "<all_urls>"

@@ -5,6 +5,7 @@ import {
   getSummary as getHistorySummary,
   installHistory,
   reset as resetHistory,
+  getWeeklyReport,
 } from './history';
 import { clear, flush, getDetails, getSummary, hydrate } from './tab-state';
 import { clearAll, DEFAULT_LOCAL, readLocal, writeLocal } from '@/shared/storage';
@@ -19,6 +20,11 @@ chrome.runtime.onInstalled.addListener(() => {
 
 installRequestMonitor();
 installHistory();
+
+chrome.notifications.onClicked.addListener((notificationId) => {
+  if (notificationId !== 'ghostprint-weekly-report') return;
+  void chrome.tabs.create({ url: chrome.runtime.getURL('popup/index.html') });
+});
 
 chrome.commands.onCommand.addListener((command) => {
   if (command !== 'toggle-xray') return;
@@ -44,6 +50,9 @@ installRouter(async (request: Request, sender) => {
 
     case 'GET_HISTORY':
       return { type: 'HISTORY', summary: await getHistorySummary(request.days) };
+
+    case 'GET_WEEKLY_REPORT':
+      return { type: 'WEEKLY_REPORT', report: await getWeeklyReport() };
 
     case 'CLEAR_ALL_DATA':
       clear();

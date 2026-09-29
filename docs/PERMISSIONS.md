@@ -14,6 +14,7 @@ the canonical source; copy them verbatim into the developer dashboard at submiss
 | `tabs` | Associates intercepted requests with the tab that caused them and renders the per-tab count on the toolbar badge. The URL is used only to derive the first-party domain for same-party comparison. |
 | `storage` | Stores user settings and locally aggregated tracker counts. All data stays on the device. |
 | `alarms` | Schedules local housekeeping: pruning aggregate history past the retention window and generating the weekly summary. |
+| `notifications` | Used only when the user opts in to one local notification that the weekly privacy report is ready. No browsing details appear in the notification. |
 
 ## Permissions deliberately NOT requested
 
