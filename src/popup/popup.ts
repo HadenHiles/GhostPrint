@@ -1,5 +1,6 @@
 import { send } from '@/background/messaging';
 import { readLocal, writeLocal } from '@/shared/storage';
+import { estimateValue } from '@/shared/value';
 import { TrackerCategory } from '@/shared/types';
 import type { CategoryTotals, HistorySummary, LedgerSummary } from '@/shared/types';
 
@@ -27,6 +28,7 @@ const weekEntities = el('week-entities');
 const status = el('status');
 const clearButton = el<HTMLButtonElement>('clear');
 const particleOverlay = el<HTMLInputElement>('particle-overlay');
+const valueAmount = el('value-amount');
 
 function categoryEntries(totals: CategoryTotals): [TrackerCategory, string, number][] {
   const values = new Map<TrackerCategory, number>([
@@ -128,13 +130,21 @@ function renderHistory(summary: HistorySummary): void {
 
 async function load(): Promise<void> {
   try {
-    const [ledger, history, local] = await Promise.all([
+    const [ledger, history, details, local] = await Promise.all([
       send({ type: 'GET_LEDGER' }),
       send({ type: 'GET_HISTORY' }),
+      send({ type: 'GET_DETAILS' }),
       readLocal(),
     ]);
     renderPage(ledger.summary);
     renderHistory(history.summary);
+    const value = estimateValue(details.trackers, ledger.summary?.pageDomain ?? null);
+    valueAmount.textContent = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: value.currency,
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 4,
+    }).format(value.amount);
     particleOverlay.checked = local.settings.particleOverlayEnabled;
     document.body.dataset.ghostprintLoaded = 'true';
   } catch {

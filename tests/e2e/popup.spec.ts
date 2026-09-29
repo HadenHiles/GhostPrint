@@ -193,3 +193,24 @@ test('particle effects are off by default and the popup toggle persists opt-in',
     )
     .toBe(true);
 });
+
+test('shows the fee-equivalent estimate with a persistent disclaimer and methodology link', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  await browseShop(context, extensionPage);
+  const popup = await openPopup(context, extensionId);
+
+  await expect(popup.locator('#value-amount')).toHaveText(/^\$\d+\.\d{3,4}$/);
+  await expect(popup.getByText(/Estimate only\. This is not earnings/)).toBeVisible();
+  await expect(popup.getByRole('link', { name: 'How is this calculated?' })).toHaveAttribute(
+    'href',
+    '../options/index.html#value-model',
+  );
+
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options/index.html#value-model`);
+  await expect(options.locator('#value-model')).toBeVisible();
+  await expect(options.getByText(/Legal review of this wording has not been completed/)).toBeVisible();
+});

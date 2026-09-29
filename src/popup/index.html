@@ -148,6 +148,19 @@
             color: var(--muted);
         }
 
+        .estimate {
+            font-size: 22px;
+            font-weight: 680;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .method-link {
+            display: inline-block;
+            margin-top: 6px;
+            color: var(--analytics);
+            font-size: 11px;
+        }
+
         .setting-row {
             display: flex;
             align-items: center;
@@ -252,6 +265,13 @@
             <span class="label" id="week-label">encounters</span>
         </div>
         <div id="week-entities"></div>
+    </section>
+
+    <section aria-labelledby="value-heading">
+        <h2 id="value-heading">Estimated data-use fee equivalent</h2>
+        <p class="estimate" id="value-amount">&mdash;</p>
+        <p class="muted">Estimate only. This is not earnings, compensation, or an actual sale price for your data.</p>
+        <a class="method-link" href="../options/index.html#value-model">How is this calculated?</a>
     </section>
 
     <section aria-label="Visual effects">

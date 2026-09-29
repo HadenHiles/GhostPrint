@@ -11,7 +11,7 @@
 
 - Task IDs are stable (`P1-01`, `P2-03`, …). Never renumber; mark obsolete tasks `[dropped]`.
 - Status markers: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked.
-- A trailing `*` means implementation is complete but one or more physical acceptance gates were not verified; it does not claim the gates passed.
+- A trailing `*` means implementation is complete but one or more acceptance or release gates were not verified; it does not claim the gates passed.
 - Each task lists **Deps**, **Steps**, **Done when**. Do not start a task with unmet deps.
 - Update the **Current Status** block below at the end of every working session.
 
@@ -20,10 +20,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-03 Real-time Value Meter |
+| Active task | P2-04 X-Ray Vision hotkey |
 | Last updated | 2026-09-29 |
-| Blockers | Phase 1 evidence gates remain; P2-03 needs citable pricing sources and legal copy review |
-| Next up | Build P2-03 sourced local estimate; mark unverified physical gates with `*` |
+| Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; they do not block implementation work |
+| Next up | Implement P2-04 hotkey, accessible X-Ray overlay, and cleanup lifecycle |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -513,14 +513,22 @@ were not physically measured.*
 
 ---
 
-### `P2-03` Real-time "Value Meter" — **`[~]` source review underway**
+### `P2-03` Real-time "Value Meter" — **`[x]*` implementation complete; legal review unverified**
 **Deps:** `P1-05`
-**Source review:** WordStream's [2026 Google Ads benchmarks](https://www.wordstream.com/blog/2026-google-ads-benchmarks)
-were retrieved 2026-09-29. They report search-campaign CPC/CTR medians from 13,474
-US campaigns, not RTB CPM or data-broker segment prices, so they do not support a
-defensible per-category data-value estimate. Do not convert them into dollar values for
-the UI. Direct, publicly citable pricing inputs and legal copy review remain prerequisites
-for a displayed estimate.
+**Source review:** The publicly posted Tunnl [data-usage-fee article](https://www.tunnldata.com/blog/third-party-audience-data-usage-fees)
+reports its own $1.50 programmatic display/most-DSP CPM (published 2023-02-10;
+retrieved 2026-09-29). It is provider-specific and not a market-wide price. The
+prototype uses it only as a clearly disclosed fee-equivalent proxy, with neutral
+category and vertical multipliers because no public breakdown was found. Method and
+limitations are in [docs/VALUE-MODEL.md](docs/VALUE-MODEL.md). Legal copy review remains
+unverified; do not include the Value Meter in a public release until counsel reviews the
+wording.
+**Implementation:** The popup computes a local fee-equivalent estimate from current-page
+tracker hits, always shows the estimate disclaimer, and links to the in-extension
+methodology. `src/data/value-model.json` stores a source URL and retrieval date for every
+numeric model input. The category/vertical neutral weights and the mapping of a tracker
+hit to an impression are modeling assumptions, not observations about an individual's
+data value.
 **Steps**
 1. Build `src/data/value-model.json`: per-category CPM-derived per-event value, sourced from **publicly citable** data-broker/RTB pricing references. Every number must carry a `source` URL and `retrievedAt` field.
 2. Compute session value = Σ(event × category weight × page-vertical multiplier). Verticals (finance, health, e-commerce, news) derived from the classifier's page-domain category, not page content.

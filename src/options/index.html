@@ -43,6 +43,13 @@
         <label><input type="checkbox" id="enabled" /> Enable tracking detection</label>
         <label><input type="checkbox" id="showCounter" /> Show the Ghost Counter on pages</label>
         <button id="clear" type="button">Clear all local data</button>
+        <section id="value-model" aria-labelledby="value-heading">
+            <h2 id="value-heading">Value estimate methodology</h2>
+            <p>Any displayed amount is an illustrative data-use fee equivalent based on a published provider-specific CPM. It is not your earnings, compensation, or the sale price of your personal data.</p>
+            <p>The model applies a flat source rate per thousand observed tracker request hits. Category and page-vertical multipliers are neutral because the cited source does not publish those breakdowns. Actual rates vary by provider, platform, audience, campaign, and contract.</p>
+            <p><a href="https://www.tunnldata.com/blog/third-party-audience-data-usage-fees" target="_blank" rel="noreferrer">Tunnl: Data Usage Fees</a></p>
+            <p>Legal review of this wording has not been completed. This estimate must not be included in a public release until that review is recorded.</p>
+        </section>
         <p id="cleared" hidden>Cleared.</p>
     </main>
     <script type="module" src="./options.ts"></script>
