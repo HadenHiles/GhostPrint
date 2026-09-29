@@ -1,15 +1,17 @@
 # GhostPrint MVP Threat Model
 
-**Status:** MVP review complete · 2026-09-28
-**Scope:** Manifest V3 extension through Phase 1, including the content script,
-service worker, popup, options page, local storage, bundled dictionary, and build output.
+**Status:** Phase 2 probe review in progress · 2026-09-29
+**Scope:** Manifest V3 extension through `P2-01`, including the MAIN-world probe,
+isolated content script, service worker, popup, options page, local storage, bundled
+dictionary, and build output.
 
 ## Security boundaries
 
 | Boundary | Trust level | Rule |
 |---|---|---|
-| Host web page | Untrusted | Content script must not accept page-supplied commands or render page strings as HTML. |
-| Content script | Extension-controlled but exposed to a hostile page | Use a closed Shadow DOM, no `window.postMessage`, and validate every runtime message. |
+| Host web page | Untrusted | Probe messages are untrusted observations; validate source, origin, nonce, shape, and classifier result. Never treat them as commands. |
+| MAIN-world probe | Page-visible and detectable | Wrap only allow-listed APIs; do not read arguments or event values; cap observations; restore wrappers on stop. |
+| Isolated content script | Extension-controlled but exposed to a hostile page | Validate the page-message bridge and every runtime message; render page-derived strings with `textContent`. |
 | Service worker | Extension-controlled | Owns classification, ledgers, storage, and the only privileged request listener. |
 | Popup/options pages | Extension-controlled | Request only typed data from the service worker; render with `textContent`. |
 | Bundled tracker data | Build-time input | Validate schema, entity references, categories, and bundle size before shipping. |
@@ -17,22 +19,32 @@ service worker, popup, options page, local storage, bundled dictionary, and buil
 
 ## Abuse cases and controls
 
-### A hostile page attempts to control the extension
+### A hostile page attempts to forge probe observations
 
-**Threat:** A page calls `window.postMessage`, modifies globals, or sends malformed
-runtime messages to make GhostPrint reveal data or change settings.
+**Threat:** A page observes or forges the `window.postMessage` bridge, modifies globals,
+or sends malformed runtime messages to influence probe-driven behavior.
 
 **Controls:**
 
-- No page-message bridge exists in the MVP.
-- Content scripts do not register `window` message listeners.
-- The service-worker router accepts only the five known discriminated request types.
+- The isolated receiver checks `event.source === window`, exact origin, a random nonce,
+  allow-listed API names, bounded selectors and hostnames, and finite timestamps.
+- The nonce is visible to page scripts and is **not** an authenticity secret. A hostile
+  page can forge a syntactically valid observation; therefore observations are
+  informational only and cannot invoke privileged actions or persist data.
+- The MAIN-world probe sends only hostnames, not full script URLs, and never reads event
+  contents, form values, API arguments, or request bodies.
+- Wrappers are capped at 64 observations and restored when probing stops. They preserve
+  native call arguments/results and are tested for native-like name, arity, and
+  `toString()` output; MAIN-world modification remains detectable by a sufficiently
+  determined page.
+- The service-worker router accepts only known discriminated request types.
 - Settings mutations are only available through the extension options page and its typed
   runtime request.
 - Page-derived values are rendered with `textContent`; no `innerHTML`, `outerHTML`,
   `insertAdjacentHTML`, `document.write`, or dynamic code execution.
 
-**Verification:** `npm run lint`, `npm run check:egress`, and the source audit below.
+**Verification:** probe parser unit tests, the sandbox MAIN-world probe e2e, `npm run lint`,
+and `npm run check:egress`.
 
 ### A tracker or page attempts to read the Ghost Counter
 
@@ -59,7 +71,7 @@ activity.
 **Controls:**
 
 - No runtime network API is used in extension code.
-- `tools/check-egress.mjs` scans JavaScript and HTML in `dist/` for network primitives.
+- `tools/check-egress.mjs` scans JavaScript and HTML in `dist/` for runtime network calls.
 - The CI workflow runs the egress check after every build.
 - Tracker-list downloads are limited to build-time tooling and never ship in `dist/`.
 
@@ -101,8 +113,8 @@ shared CDN apex, causing false attribution or a precision collapse.
 
 ## Source audit checklist
 
-- [x] No `window.postMessage` listener or page-to-extension bridge.
-- [x] No runtime `fetch`, XHR, `sendBeacon`, WebSocket, EventSource, or `importScripts`.
+- [x] Probe bridge validates source, origin, nonce, shape, and third-party classification; forged observations cannot invoke privileged actions.
+- [x] No outbound network calls; the MAIN-world probe only wraps page-owned network APIs.
 - [x] No HTML injection sinks in extension source.
 - [x] No raw URL, request body, header, or page content in local history.
 - [x] Unknown trackers remain explicitly unknown; no guessed corporate attribution.
@@ -117,7 +129,7 @@ shared CDN apex, causing false attribution or a precision collapse.
 - Live-site performance, recall, and the 20-site compatibility sweep remain pending a
   Chromium environment with network access (`P1-01b`, `P1-06`, and the live portion of
   `P1-07`).
-- Phase 2 DOM instrumentation is a new trust boundary and requires a separate threat-model
-  update before implementation.
+- The Phase 2 probe's ≤ 3 ms overhead and 30-site no-breakage gates remain unmeasured; the
+  sandbox regression is not representative compatibility evidence.
 - Phase 3 telemetry, marketplace, and buyer integrations are out of scope and must not be
   enabled by merely adding a dependency or endpoint.

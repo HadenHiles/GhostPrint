@@ -5,6 +5,7 @@ const server = createServer((request, response) => {
     const pages = {
         '/facebook': facebookPage(),
         '/shopify': shopifyPage(),
+        '/probe': probePage(),
         '/hostile-css': hostileCssPage(),
         '/spa': spaPage(),
         '/iframe': iframePage(),
@@ -70,6 +71,11 @@ function facebookPage() {
 function shopifyPage() {
     return shell('Shopify sandbox', `<header><nav><strong>Store</strong><span>Catalog</span><span>Orders</span></nav></header>
 <main><h1>Shopify-like checkout</h1><p>Product and checkout controls remain clickable while GhostPrint is active.</p><button id="buy" onclick="window.__bought=true">Buy now</button>${trackers()}</main>`);
+}
+
+function probePage() {
+    return shell('Probe sandbox', `<main><h1>Probe target</h1><form><input id="probe-input" type="text"></form></main>
+<script src="https://static.hotjar.com/probe.js"></script>`);
 }
 
 function hostileCssPage() {

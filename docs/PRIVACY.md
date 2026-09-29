@@ -1,6 +1,6 @@
 # GhostPrint Privacy Policy (MVP)
 
-**Last updated:** 2026-09-28
+**Last updated:** 2026-09-29
 
 ## Summary
 
@@ -14,6 +14,14 @@ To show the current-page counter, the extension observes outbound HTTP(S) reques
 by browser tabs. It uses the request target and initiator only long enough to determine
 whether the request is third-party and whether its hostname matches the bundled tracker
 dictionary.
+
+When detection is enabled and a site is not muted, Phase 2 probes also observe
+third-party scripts registering selected input-related event listeners, observing form
+elements, or calling network and fingerprinting APIs. A probe keeps only the API name,
+a tag/type-based element selector, a timestamp, and the script hostname long enough to
+classify it. The bridge passes only the hostname, not the script URL. It does not read
+event contents, form values, API arguments, request URLs, or request bodies. Probe
+observations are held in page memory only and are not added to stored history.
 
 GhostPrint does **not** read page text, form values, cookies, browsing history, bookmarks,
 passwords, downloads, or account information. It does not inject into subframes.
@@ -57,9 +65,11 @@ removed by a local daily alarm.
 
 ## Network and telemetry
 
-The shipped extension has no network primitives. CI scans the built `dist/` directory for
-`fetch`, XHR, `sendBeacon`, WebSocket, EventSource, and `importScripts`. Build-time tooling
-may download an upstream filter list, but that tooling is not included in the extension.
+GhostPrint itself does not issue network requests. The MAIN-world probe wraps selected
+page APIs transparently to observe calls; it does not invoke them on the page's behalf or
+change their arguments or results. CI scans the built `dist/` directory for runtime
+network calls. Build-time tooling may download an upstream filter list, but that tooling
+is not included in the extension.
 
 There is no telemetry, account system, remote configuration, or crash-reporting endpoint
 in the MVP. Any future network feature must be separately opt-in, documented, and gated

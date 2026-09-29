@@ -30,7 +30,7 @@ Load `dist/` via `chrome://extensions` → Developer mode → **Load unpacked**.
 | `npm run lint` | ESLint, including injection-sink and CSP rules |
 | `npm test` | Vitest unit tests |
 | `npm run test:e2e` | Playwright, loads the real extension into Chromium |
-| `npm run check:egress` | Asserts `dist/` contains no network primitives |
+| `npm run check:egress` | Asserts `dist/` contains no outbound network calls |
 
 ## Layout
 

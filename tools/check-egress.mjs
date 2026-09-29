@@ -3,14 +3,15 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Enforces the Phase 1/2 zero-egress constraint mechanically: no shipped code may
- * contain a network primitive. Update this only alongside an explicit, consented
- * opt-in gate (see ROADMAP P2-06 / P3-00).
+ * Enforces the Phase 1/2 zero-egress constraint mechanically: shipped code may not
+ * issue requests. Passive MAIN-world wrappers may refer to page APIs without invoking
+ * them. Update this only alongside an explicit, consented opt-in gate (see ROADMAP
+ * P2-06 / P3-00).
  */
 const FORBIDDEN = [
     { pattern: /\bfetch\s*\(/, name: 'fetch()' },
-    { pattern: /\bXMLHttpRequest\b/, name: 'XMLHttpRequest' },
-    { pattern: /\bsendBeacon\b/, name: 'navigator.sendBeacon' },
+    { pattern: /\bXMLHttpRequest\s*\(/, name: 'XMLHttpRequest request construction' },
+    { pattern: /\bsendBeacon\s*\(|\bnavigator\s*\[\s*['"]sendBeacon['"]\s*\]\s*\(/, name: 'navigator.sendBeacon()' },
     { pattern: /\bEventSource\b/, name: 'EventSource' },
     { pattern: /\bnew\s+WebSocket\b/, name: 'WebSocket' },
     { pattern: /\bimportScripts\s*\(/, name: 'importScripts()' },
@@ -41,4 +42,4 @@ if (violations.length > 0) {
     process.exit(1);
 }
 
-console.log('Egress check passed: no network primitives in dist/.');
+console.log('Egress check passed: no outbound network calls in dist/.');

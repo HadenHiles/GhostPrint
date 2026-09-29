@@ -13,11 +13,49 @@ async function openSandbox(context: BrowserContext, path: string): Promise<Page>
     await route.fulfill({ response });
   });
 
-  await context.route(/^https:\/\/(www\.google-analytics\.com|static\.hotjar\.com|an-unknown-tracker\.example)\//, (route) =>
-    route.fulfill({ contentType: 'image/gif', body: '' }),
+  await context.route(
+    /^https:\/\/(www\.google-analytics\.com|static\.hotjar\.com|an-unknown-tracker\.example)\//,
+    (route) => {
+      if (route.request().resourceType() === 'script') {
+        return route.fulfill({
+          contentType: 'application/javascript',
+          body: `
+            const input = document.querySelector('#probe-input');
+            input.addEventListener('keydown', () => {});
+            new MutationObserver(() => {}).observe(input, { attributes: true });
+            fetch('https://static.hotjar.com/collect').catch(() => {});
+            navigator.sendBeacon('https://static.hotjar.com/collect', 'x');
+            const request = new XMLHttpRequest();
+            request.open('POST', 'https://static.hotjar.com/collect');
+            request.send('x');
+            const canvas = document.createElement('canvas');
+            canvas.toDataURL();
+            canvas.getContext('2d').getImageData(0, 0, 1, 1);
+            const gl = canvas.getContext('webgl');
+            if (gl) gl.getParameter(gl.VERSION);
+            window.__probeFunctionShape = [
+              EventTarget.prototype.addEventListener.name,
+              EventTarget.prototype.addEventListener.length,
+              EventTarget.prototype.addEventListener.toString().includes('[native code]'),
+            ];
+          `,
+        });
+      }
+      return route.fulfill({ contentType: 'image/gif', body: '' });
+    },
   );
 
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    const messages: unknown[] = [];
+    Object.defineProperty(window, '__ghostprintProbeMessages', { value: messages });
+    window.addEventListener('message', (event) => {
+      const data: unknown = event.data;
+      if (event.source === window && typeof data === 'object' && data !== null && 'channel' in data && data.channel === 'ghostprint-probe') {
+        messages.push(data);
+      }
+    });
+  });
   await page.goto(`${SANDBOX_ORIGIN}${path}`);
   return page;
 }
@@ -44,6 +82,50 @@ test('Facebook-like sandbox detects trackers without depending on Facebook', asy
       'google-analytics.com': { entityId: 'google', category: 1 },
       'hotjar.com': { entityId: 'contentsquare', category: 2 },
     });
+});
+
+test('MAIN-world probe attributes a tracker listener to its host and target', async ({ context }) => {
+  const page = await openSandbox(context, '/probe');
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages.some(
+          (message) =>
+            message.type === 'GHOSTPRINT_PROBE_EVENT' &&
+            message.api === 'addEventListener' &&
+            message.scriptHost === 'static.hotjar.com' &&
+            message.selector === 'input[type="text"]',
+        );
+      }),
+    )
+    .toBe(true);
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages
+          .filter((message) => message.type === 'GHOSTPRINT_PROBE_EVENT')
+          .map((message) => message.api);
+      }),
+    )
+    .toEqual(
+      expect.arrayContaining([
+        'addEventListener',
+        'MutationObserver.observe',
+        'fetch',
+        'sendBeacon',
+        'XMLHttpRequest.send',
+        'HTMLCanvasElement.toDataURL',
+        'CanvasRenderingContext2D.getImageData',
+      ]),
+    );
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __probeFunctionShape: unknown[] }).__probeFunctionShape))
+    .toEqual(['addEventListener', 2, true]);
 });
 
 test('sandbox checkout CTA remains clickable around the widget', async ({ context }) => {

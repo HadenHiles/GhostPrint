@@ -9,17 +9,22 @@ const REQUIRED_DOCS = ['docs/PRIVACY.md', 'docs/THREAT-MODEL.md'];
 
 const FORBIDDEN_SOURCE = [
     { pattern: /\bfetch\s*\(/, name: 'fetch()' },
-    { pattern: /\bXMLHttpRequest\b/, name: 'XMLHttpRequest' },
-    { pattern: /\bsendBeacon\b/, name: 'navigator.sendBeacon' },
+    { pattern: /\bXMLHttpRequest\s*\(/, name: 'XMLHttpRequest request construction' },
+    { pattern: /\bsendBeacon\s*\(|\bnavigator\s*\[\s*['"]sendBeacon['"]\s*\]\s*\(/, name: 'navigator.sendBeacon()' },
     { pattern: /\bEventSource\b/, name: 'EventSource' },
     { pattern: /\bnew\s+WebSocket\b/, name: 'WebSocket' },
     { pattern: /\bimportScripts\s*\(/, name: 'importScripts()' },
     { pattern: /\b(innerHTML|outerHTML)\b/, name: 'HTML string sink' },
     { pattern: /\binsertAdjacentHTML\b/, name: 'insertAdjacentHTML' },
     { pattern: /\bdocument\.(write|writeln)\s*\(/, name: 'document.write()' },
-    { pattern: /window\.postMessage\s*\(/, name: 'window.postMessage()' },
-    { pattern: /addEventListener\s*\(\s*['"]message['"]/, name: 'page message listener' },
+    { pattern: /window\.postMessage\s*\(/g, name: 'window.postMessage()' },
+    { pattern: /addEventListener\s*\(\s*['"]message['"]/g, name: 'page message listener' },
 ];
+
+const ALLOWED_BRIDGE_CALLS = new Map([
+    ['src/content/probes/main.ts', new Map([['window.postMessage()', 2], ['page message listener', 2]])],
+    ['src/content/probes/index.ts', new Map([['window.postMessage()', 2], ['page message listener', 1]])],
+]);
 
 function* walk(directory) {
     for (const entry of readdirSync(directory)) {
@@ -33,8 +38,14 @@ const violations = [];
 for (const file of walk(SRC)) {
     if (!/\.(ts|js|html)$/.test(file)) continue;
     const source = readFileSync(file, 'utf8');
+    const relative = file.slice(ROOT.length).replace(/^[/\\]/, '');
+    const allowedCalls = ALLOWED_BRIDGE_CALLS.get(relative);
     for (const { pattern, name } of FORBIDDEN_SOURCE) {
-        if (pattern.test(source)) violations.push(`${file.slice(ROOT.length + 1)}: ${name}`);
+        const count = source.match(pattern)?.length ?? 0;
+        const allowed = allowedCalls?.get(name) ?? 0;
+        if (count > allowed || (allowed > 0 && count !== allowed)) {
+            violations.push(`${relative}: ${name} (${count} occurrence(s); ${allowed} allowed)`);
+        }
     }
 }
 
@@ -71,4 +82,4 @@ if (violations.length > 0) {
     process.exit(1);
 }
 
-console.log('Hardening check passed: source, manifest, and privacy docs are within MVP policy.');
+console.log('Hardening check passed: source, manifest, and privacy docs are within local-only policy.');

@@ -1,4 +1,5 @@
 import { GhostCounter } from './ghost-counter';
+import { startProbeBridge } from './probes';
 import { send } from '@/background/messaging';
 import { readLocal, writeLocal } from '@/shared/storage';
 import type { WidgetAnchor } from '@/shared/storage';
@@ -15,18 +16,24 @@ let widget: GhostCounter | null = null;
 let port: chrome.runtime.Port | null = null;
 let reconnectDelay = RECONNECT_BASE_MS;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let stopProbeBridge: (() => void) | null = null;
 
 async function boot(): Promise<void> {
   if (!shouldRun()) return;
 
+  stopProbeBridge = startProbeBridge();
   const settings = await readLocal();
   const origin = location.origin;
+  if (!settings.settings.enabled || settings.mutedOrigins.includes(origin)) {
+    stopProbeBridge();
+    stopProbeBridge = null;
+    return;
+  }
 
   connect();
   document.documentElement.setAttribute(READY_ATTR, '1');
 
-  if (!settings.settings.enabled || !settings.settings.showCounter) return;
-  if (settings.mutedOrigins.includes(origin)) return;
+  if (!settings.settings.showCounter) return;
 
   widget = new GhostCounter(
     {
@@ -130,6 +137,8 @@ async function disableCounter(): Promise<void> {
 }
 
 function teardown(): void {
+  stopProbeBridge?.();
+  stopProbeBridge = null;
   widget?.destroy();
   widget = null;
 }
