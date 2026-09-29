@@ -54,8 +54,13 @@
             gap: 8px;
         }
 
-        #gpc-exceptions li span { overflow-wrap: anywhere; }
-        #gpc-exceptions li button { margin: 0 0 0 auto; }
+        #gpc-exceptions li span {
+            overflow-wrap: anywhere;
+        }
+
+        #gpc-exceptions li button {
+            margin: 0 0 0 auto;
+        }
 
         button {
             margin-top: 20px;
@@ -83,7 +88,8 @@
             <label><input type="checkbox" id="gpc-enabled" /> Send the GPC signal</label>
             <label for="gpc-exception-input">Site exceptions</label>
             <div class="exception-entry">
-                <input id="gpc-exception-input" type="text" inputmode="url" autocomplete="off" placeholder="example.com" />
+                <input id="gpc-exception-input" type="text" inputmode="url" autocomplete="off"
+                    placeholder="example.com" />
                 <button id="gpc-exception-add" type="button">Add</button>
             </div>
             <ul id="gpc-exceptions" aria-label="GPC site exceptions"></ul>
