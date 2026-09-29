@@ -1,6 +1,6 @@
 import type { TabLedger } from './types';
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export interface LocalSchema {
   schemaVersion: number;
@@ -9,6 +9,8 @@ export interface LocalSchema {
   widgetAnchors: Record<string, WidgetAnchor>;
   /** Origins where the Ghost Counter is suppressed. */
   mutedOrigins: string[];
+  /** Hostnames exempt from the Global Privacy Control request header. */
+  gpcExceptions: string[];
 }
 
 export interface Settings {
@@ -16,6 +18,7 @@ export interface Settings {
   showCounter: boolean;
   particleOverlayEnabled: boolean;
   weeklyReportNotificationEnabled: boolean;
+  gpcEnabled: boolean;
 }
 
 export type WidgetAnchor = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -27,9 +30,11 @@ export const DEFAULT_LOCAL: LocalSchema = {
     showCounter: true,
     particleOverlayEnabled: false,
     weeklyReportNotificationEnabled: false,
+    gpcEnabled: false,
   },
   widgetAnchors: {},
   mutedOrigins: [],
+  gpcExceptions: [],
 };
 
 export async function readLocal(): Promise<LocalSchema> {
@@ -57,6 +62,7 @@ export function migrate(
       return { ...DEFAULT_LOCAL };
     case 1:
     case 2:
+    case 3:
     case SCHEMA_VERSION:
       return {
         ...DEFAULT_LOCAL,

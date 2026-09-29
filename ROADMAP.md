@@ -20,10 +20,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-06 Attribution & organic loop measurement |
+| Active task | P2-06 telemetry sink and consent review |
 | Last updated | 2026-09-29 |
-| Blockers | Phase 1 evidence and P2-03 legal copy review remain unverified release gates; P2-06 egress needs a separate opt-in consent design |
-| Next up | Define P2-06 opt-in consent and telemetry data flow before any egress implementation |
+| Blockers | P2-06 needs a provisioned telemetry sink and reviewed consent wording; Phase 1/P2-03 release gates remain unverified |
+| Next up | Provision P2-06 sink and consent copy; P2-07a GPC is implemented* and 2b remains legally deferred |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -584,9 +584,13 @@ not physically verified.*
 
 ---
 
-### `P2-06` Attribution & organic loop measurement
+### `P2-06` Attribution & organic loop measurement — **`[!]` blocked: telemetry sink and consent review unavailable**
 **Deps:** `P2-05`
 **Original success criterion:** *≥ 3% of active users share or invite*
+
+**Blocker:** No telemetry endpoint or hosting configuration exists in the repository,
+and consent wording requires review before egress. Do not invent a destination or send
+data to a placeholder. This does not block independent P2-07 implementation.
 
 **Steps**
 1. Define the minimal metric set: `weekly_report_viewed`, `share_clicked`, `share_completed`, `xray_toggled`, `popup_opened`, `w4_retained`.
@@ -598,17 +602,22 @@ not physically verified.*
 
 ---
 
-### `P2-07` Integrated cleanup engine (GPC + opt-out)
+### `P2-07` Integrated cleanup engine (GPC + opt-out) — **`[x]*` 2a implemented; live header check unverified**
 **Deps:** `P1-03`
 **Scope discipline:** the original roadmap conflates two very different things. Split them.
 
-**2a — GPC signal (ship in V1)**
+**2a — GPC signal (ship in V1) — `[x]*`**
+**Implementation:** Default-off GPC adds `Sec-GPC: 1` using one dynamic DNR rule,
+excludes user-configured initiator hostnames, and sets the MAIN-world navigator property
+on non-excepted pages. Options UI and e2e tests cover opt-in, normalization, exceptions,
+and dynamic rule contents. The live outbound header check at `globalprivacycontrol.org`
+was not physically verified.*
 1. Set the `Sec-GPC: 1` request header on all outbound requests via `declarativeNetRequest` `modifyHeaders` rules.
 2. Set `navigator.globalPrivacyControl = true` via a MAIN-world script.
 3. Add a visible on/off toggle and a per-site exception list.
 **Done when:** `globalprivacycontrol.org/check` confirms the signal, and a DNR rule-count check confirms we stay well under the static rule limit.
 
-**2b — Automated opt-out requests (defer; do not ship blind)**
+**2b — Automated opt-out requests (defer; do not ship blind) — `[!]` legal review required**
 1. **Legal gate first.** Acting as an authorized agent to submit CCPA/CPRA deletion requests has jurisdiction-specific authorization requirements. Obtain written counsel guidance before any code is written. Record the outcome in `docs/ADR-002-opt-out-agent.md`.
 2. If cleared: build a manual-confirmation flow only — pre-fill a request, show the user exactly what will be sent, require explicit per-request approval. **No silent bulk submission, ever.**
 3. Maintain a small, curated registry of privacy contact endpoints; start with ≤ 25 high-prevalence entities.

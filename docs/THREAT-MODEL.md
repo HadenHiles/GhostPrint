@@ -68,6 +68,9 @@ widget's behavior.
 - Weekly reports must use the current aggregate history, which intentionally omits the
   first-party site associated with tracker observations. Do not reconstruct or persist
   that association for a share card without a separately reviewed privacy change.
+- GPC is default-off. When enabled, one bounded DNR rule sets `Sec-GPC: 1` and excludes
+  user-entered initiator host exceptions; the MAIN-world property reflects the same
+  preference. Exception input accepts hostnames only and is rendered with `textContent`.
 - The report card is rendered locally, contains only aggregate counts and a third-party
   tracker label, supports redaction before sharing, and has no upload path. Its
   notification is default-off and contains no browsing details.

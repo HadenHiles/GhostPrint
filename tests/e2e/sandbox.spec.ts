@@ -235,6 +235,57 @@ test('X-Ray resets on SPA history navigation', async ({ context, extensionPage }
   await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
 });
 
+test('GPC sets the page property and DNR header rule, then honors site exceptions', async ({
+  context,
+  extensionPage,
+}) => {
+  const page = await openSandbox(context, '/shopify');
+  await extensionPage.evaluate(async () => {
+    const stored = await chrome.storage.local.get<{ settings: Record<string, unknown> }>('settings');
+    await chrome.storage.local.set({
+      schemaVersion: 4,
+      settings: { ...stored.settings, gpcEnabled: true },
+      gpcExceptions: [],
+    });
+  });
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl,
+      ),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const rules = await chrome.declarativeNetRequest.getDynamicRules();
+        return rules.find((rule) => rule.id === 741)?.action.requestHeaders;
+      }),
+    )
+    .toEqual([{ header: 'Sec-GPC', operation: 'set', value: '1' }]);
+
+  await extensionPage.evaluate(async () => {
+    await chrome.storage.local.set({ gpcExceptions: ['facebook.test'] });
+  });
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl,
+      ),
+    )
+    .not.toBe(true);
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const rules = await chrome.declarativeNetRequest.getDynamicRules();
+        return rules.find((rule) => rule.id === 741)?.condition.excludedInitiatorDomains;
+      }),
+    )
+    .toEqual(['facebook.test']);
+});
+
 test('sandbox checkout CTA remains clickable around the widget', async ({ context }) => {
   const page = await openSandbox(context, '/shopify');
   await expect(page.locator(WIDGET)).toBeAttached();

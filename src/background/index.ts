@@ -1,5 +1,6 @@
 import { installRouter } from './messaging';
 import { installRequestMonitor } from './request-monitor';
+import { installGpcRuleSync } from './gpc';
 import {
   flush as flushHistory,
   getSummary as getHistorySummary,
@@ -20,6 +21,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 installRequestMonitor();
 installHistory();
+installGpcRuleSync();
 
 chrome.notifications.onClicked.addListener((notificationId) => {
   if (notificationId !== 'ghostprint-weekly-report') return;

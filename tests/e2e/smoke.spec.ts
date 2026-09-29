@@ -22,6 +22,7 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
       showCounter: true,
       particleOverlayEnabled: false,
       weeklyReportNotificationEnabled: false,
+      gpcEnabled: false,
     });
 });
 
@@ -95,4 +96,35 @@ test('weekly report notifications are opt-in and persist from Options', async ({
       }),
     )
     .toBe(true);
+});
+
+test('GPC defaults off and hostname exceptions persist from Options', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options/index.html`);
+  const gpc = options.locator('#gpc-enabled');
+  await expect(gpc).not.toBeChecked();
+
+  await options.locator('#gpc-exception-input').fill('Shop.Example.com');
+  await options.locator('#gpc-exception-add').click();
+  await expect(options.locator('#gpc-exceptions')).toContainText('shop.example.com');
+  await gpc.check();
+
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const local = await chrome.storage.local.get<{
+          settings?: { gpcEnabled?: boolean };
+          gpcExceptions?: string[];
+        }>(null);
+        return {
+          enabled: local.settings?.gpcEnabled,
+          exceptions: local.gpcExceptions,
+        };
+      }),
+    )
+    .toEqual({ enabled: true, exceptions: ['shop.example.com'] });
 });

@@ -22,8 +22,9 @@ const FORBIDDEN_SOURCE = [
 ];
 
 const ALLOWED_BRIDGE_CALLS = new Map([
-    ['src/content/probes/main.ts', new Map([['window.postMessage()', 2], ['page message listener', 2]])],
+    ['src/content/probes/main.ts', new Map([['window.postMessage()', 2], ['page message listener', 3]])],
     ['src/content/probes/index.ts', new Map([['window.postMessage()', 2], ['page message listener', 1]])],
+    ['src/content/index.ts', new Map([['window.postMessage()', 1]])],
 ]);
 
 function* walk(directory) {

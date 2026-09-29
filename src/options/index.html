@@ -25,6 +25,38 @@
             margin: 12px 0;
         }
 
+        .exception-entry {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .exception-entry input {
+            min-width: 0;
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #3a3a4a;
+            border-radius: 6px;
+            background: #1a1a22;
+            color: inherit;
+        }
+
+        #gpc-exceptions {
+            display: grid;
+            gap: 6px;
+            padding: 0;
+            list-style: none;
+        }
+
+        #gpc-exceptions li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #gpc-exceptions li span { overflow-wrap: anywhere; }
+        #gpc-exceptions li button { margin: 0 0 0 auto; }
+
         button {
             margin-top: 20px;
             padding: 8px 14px;
@@ -44,7 +76,18 @@
                 href="chrome://extensions/shortcuts" target="_blank" rel="noreferrer">extension shortcuts</a>.</p>
         <label><input type="checkbox" id="enabled" /> Enable tracking detection</label>
         <label><input type="checkbox" id="showCounter" /> Show the Ghost Counter on pages</label>
-        <label><input type="checkbox" id="weekly-report-notification" /> Notify me when the weekly report is ready</label>
+        <label><input type="checkbox" id="weekly-report-notification" /> Notify me when the weekly report is
+            ready</label>
+        <section aria-labelledby="gpc-heading">
+            <h2 id="gpc-heading">Global Privacy Control</h2>
+            <label><input type="checkbox" id="gpc-enabled" /> Send the GPC signal</label>
+            <label for="gpc-exception-input">Site exceptions</label>
+            <div class="exception-entry">
+                <input id="gpc-exception-input" type="text" inputmode="url" autocomplete="off" placeholder="example.com" />
+                <button id="gpc-exception-add" type="button">Add</button>
+            </div>
+            <ul id="gpc-exceptions" aria-label="GPC site exceptions"></ul>
+        </section>
         <button id="clear" type="button">Clear all local data</button>
         <section id="value-model" aria-labelledby="value-heading">
             <h2 id="value-heading">Value estimate methodology</h2>

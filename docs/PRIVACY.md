@@ -62,13 +62,19 @@ deletes this report.
 
 Settings include whether detection, the counter, the default-off particle overlay, and
 default-off weekly report notifications are enabled, muted origins, and an optional
-per-origin widget anchor. These remain on the device.
+per-origin widget anchor. The default-off Global Privacy Control setting and its hostname
+exceptions also remain on the device.
 
 The weekly report is computed from existing aggregate history. It does not retain which
 first-party site caused a tracker observation; its highlight is a third-party tracker
 domain. The PNG is generated locally and is never uploaded. The user can redact the
 tracker-domain label before sharing. When explicitly enabled, the local notification
 only says the report is ready and contains no browsing details.
+
+When enabled, GhostPrint adds `Sec-GPC: 1` to outbound HTTP(S) requests and exposes
+`navigator.globalPrivacyControl = true` in the page's MAIN world. Both behaviors respect
+the user's hostname exception list. GhostPrint does not change this setting unless the
+user enables it.
 
 ## Data deletion
 

@@ -3,6 +3,7 @@ import { startProbeBridge, subscribeToProbeObservations } from './probes';
 import { send } from '@/background/messaging';
 import { readLocal, writeLocal } from '@/shared/storage';
 import type { LocalSchema, WidgetAnchor } from '@/shared/storage';
+import { isGpcExcepted } from '@/shared/gpc';
 import { PORT_NAME } from '@/shared/types';
 import type { LedgerSummary, Push, TrackerDetail } from '@/shared/types';
 import type { ProbeObservation } from './probes';
@@ -32,6 +33,7 @@ async function boot(): Promise<void> {
 }
 
 function applySettings(settings: LocalSchema): void {
+  applyGpcSignal(settings);
   const origin = location.origin;
   if (!settings.settings.enabled || settings.mutedOrigins.includes(origin)) {
     teardown();
@@ -76,6 +78,11 @@ function applySettings(settings: LocalSchema): void {
   if (settings.settings.showCounter) {
     void send({ type: 'GET_LEDGER' }).then((summary) => widget?.update(summary.summary));
   }
+}
+
+function applyGpcSignal(settings: LocalSchema): void {
+  const enabled = settings.settings.gpcEnabled && !isGpcExcepted(location.hostname, settings.gpcExceptions);
+  window.postMessage({ channel: 'ghostprint-gpc', type: 'GPC_STATE', enabled }, location.origin);
 }
 
 /**
@@ -230,7 +237,12 @@ document.addEventListener('visibilitychange', () => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (
     areaName === 'local' &&
-    ('settings' in changes || 'mutedOrigins' in changes || 'widgetAnchors' in changes)
+    (
+      'settings' in changes ||
+      'mutedOrigins' in changes ||
+      'widgetAnchors' in changes ||
+      'gpcExceptions' in changes
+    )
   ) {
     void readLocal().then(applySettings);
   }

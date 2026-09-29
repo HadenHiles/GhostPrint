@@ -2,6 +2,7 @@ const CHANNEL = 'ghostprint-probe';
 const INIT_TYPE = 'GHOSTPRINT_PROBE_INIT';
 const EVENT_TYPE = 'GHOSTPRINT_PROBE_EVENT';
 const STOP_TYPE = 'GHOSTPRINT_PROBE_STOP';
+const GPC_CHANNEL = 'ghostprint-gpc';
 const MAX_EVENTS = 64;
 const EVENT_NAMES = new Set(['keydown', 'keyup', 'input', 'paste', 'mousemove', 'scroll']);
 const FORM_SELECTOR = 'input, textarea, select, form';
@@ -28,6 +29,7 @@ interface ProbeMessage {
 
 let nonce: string | null = null;
 let recorded = 0;
+const originalGpcDescriptor = Object.getOwnPropertyDescriptor(navigator, 'globalPrivacyControl');
 const wrappedMethods: {
   owner: object;
   name: string;
@@ -36,6 +38,40 @@ const wrappedMethods: {
 }[] = [];
 
 window.addEventListener('message', onInit);
+window.addEventListener('message', onGpcState);
+
+function onGpcState(event: MessageEvent<unknown>): void {
+  if (
+    event.source !== window ||
+    event.origin !== location.origin ||
+    typeof event.data !== 'object' ||
+    event.data === null ||
+    !('channel' in event.data) ||
+    !('type' in event.data) ||
+    !('enabled' in event.data) ||
+    event.data.channel !== GPC_CHANNEL ||
+    event.data.type !== 'GPC_STATE' ||
+    typeof event.data.enabled !== 'boolean'
+  ) {
+    return;
+  }
+
+  if (event.data.enabled) {
+    try {
+      Object.defineProperty(navigator, 'globalPrivacyControl', {
+        configurable: true,
+        enumerable: true,
+        get: () => true,
+      });
+    } catch {
+      // A page-defined non-configurable property cannot be overridden safely.
+    }
+    return;
+  }
+
+  if (originalGpcDescriptor === undefined) Reflect.deleteProperty(navigator, 'globalPrivacyControl');
+  else Object.defineProperty(navigator, 'globalPrivacyControl', originalGpcDescriptor);
+}
 
 function onInit(event: MessageEvent<unknown>): void {
   if (

@@ -15,6 +15,7 @@ describe('local storage migration', () => {
       showCounter: true,
       particleOverlayEnabled: false,
       weeklyReportNotificationEnabled: false,
+      gpcEnabled: false,
     });
     expect(migrated.mutedOrigins).toEqual(['https://example.com']);
   });
@@ -23,6 +24,8 @@ describe('local storage migration', () => {
     expect(migrate({}).settings.particleOverlayEnabled).toBe(false);
     expect(DEFAULT_LOCAL.settings.particleOverlayEnabled).toBe(false);
     expect(DEFAULT_LOCAL.settings.weeklyReportNotificationEnabled).toBe(false);
+    expect(DEFAULT_LOCAL.settings.gpcEnabled).toBe(false);
+    expect(DEFAULT_LOCAL.gpcExceptions).toEqual([]);
   });
 
   it('adds the notification preference to existing v2 settings', () => {
@@ -36,6 +39,22 @@ describe('local storage migration', () => {
       showCounter: false,
       particleOverlayEnabled: true,
       weeklyReportNotificationEnabled: false,
+      gpcEnabled: false,
     });
+  });
+
+  it('adds GPC defaults to existing v3 settings', () => {
+    const migrated = migrate({
+      schemaVersion: 3,
+      settings: {
+        enabled: true,
+        showCounter: true,
+        particleOverlayEnabled: true,
+        weeklyReportNotificationEnabled: true,
+      },
+    });
+
+    expect(migrated.settings.gpcEnabled).toBe(false);
+    expect(migrated.gpcExceptions).toEqual([]);
   });
 });
