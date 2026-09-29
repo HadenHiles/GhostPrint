@@ -8,4 +8,10 @@ export default defineConfig({
   workers: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: { trace: 'retain-on-failure' },
+  webServer: {
+    command: 'node tools/sandbox-server.mjs',
+    url: 'http://127.0.0.1:4173/facebook',
+    reuseExistingServer: true,
+    timeout: 10_000,
+  },
 });

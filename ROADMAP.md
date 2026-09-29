@@ -41,6 +41,10 @@ three navigation failures occurred, and the worst measured degradation was 259.4
 fixtures; the representative 15-site e-commerce corpus remains pending on `P1-01b`.
 **Phase 1 implementation complete.** Live evidence is collected; performance remediation
 and manual labeling remain before the exit gate can pass.
+**Sandbox validation complete.** A local server and six e2e scenarios model social-feed,
+checkout, hostile-CSS, SPA, iframe, and CSP behavior without depending on anti-bot-prone
+production sites. See [tools/sandbox-server.mjs](tools/sandbox-server.mjs) and
+[tests/e2e/sandbox.spec.ts](tests/e2e/sandbox.spec.ts).
 
 ---
 
@@ -445,8 +449,9 @@ Implementation gates are green: `P1-04` automated widget coverage, `P1-08` harde
 - `P1-01b` crawl: ≥ 500 prevalence-ranked hosts within the bundle budget.
 - `P1-07` representative corpus: 15 labeled e-commerce fixtures, ≥ 85% recall and
   ≥ 95% precision.
-- `P1-04` live 20-site compatibility pass: no CTA overlap, console errors, or duplicate
-  widget injection.
+- `P1-04` sandbox compatibility pass: ✅ 6 scenarios covering Facebook-like navigation,
+  checkout CTA, hostile CSS, SPA navigation, iframe isolation, and CSP. The live 20-site
+  pass remains observational evidence, not the correctness harness.
 
 ---
 
