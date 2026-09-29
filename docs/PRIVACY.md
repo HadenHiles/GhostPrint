@@ -15,13 +15,14 @@ by browser tabs. It uses the request target and initiator only long enough to de
 whether the request is third-party and whether its hostname matches the bundled tracker
 dictionary.
 
-When detection is enabled and a site is not muted, Phase 2 probes also observe
-third-party scripts registering selected input-related event listeners, observing form
-elements, or calling network and fingerprinting APIs. A probe keeps only the API name,
-a tag/type-based element selector, a timestamp, and the script hostname long enough to
-classify it. The bridge passes only the hostname, not the script URL. It does not read
-event contents, form values, API arguments, request URLs, or request bodies. Probe
-observations are held in page memory only and are not added to stored history.
+When detection and the default-off **Show probe effects** setting are enabled on an
+unmuted site, Phase 2 probes observe third-party scripts registering selected
+input-related event listeners, observing form elements, or calling network and
+fingerprinting APIs. A probe keeps only the API name, a tag/type-based element selector,
+a timestamp, and the script hostname long enough to classify it. The bridge passes only
+the hostname, not the script URL. It does not read event contents, form values, API
+arguments, request URLs, or request bodies. Probe observations are held in page memory
+only and are not added to stored history.
 
 GhostPrint does **not** read page text, form values, cookies, browsing history, bookmarks,
 passwords, downloads, or account information. It does not inject into subframes.
@@ -53,8 +54,9 @@ aggregate to show the local seven-day summary.
 
 ### Settings
 
-Settings include whether detection and the counter are enabled, muted origins, and an
-optional per-origin widget anchor. These remain on the device.
+Settings include whether detection, the counter, and the default-off particle overlay are
+enabled, muted origins, and an optional per-origin widget anchor. These remain on the
+device.
 
 ## Data deletion
 

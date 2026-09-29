@@ -1,8 +1,8 @@
 import { GhostCounter } from './ghost-counter';
-import { startProbeBridge } from './probes';
+import { startProbeBridge, subscribeToProbeObservations } from './probes';
 import { send } from '@/background/messaging';
 import { readLocal, writeLocal } from '@/shared/storage';
-import type { WidgetAnchor } from '@/shared/storage';
+import type { LocalSchema, WidgetAnchor } from '@/shared/storage';
 import { PORT_NAME } from '@/shared/types';
 import type { LedgerSummary, Push, TrackerDetail } from '@/shared/types';
 
@@ -17,42 +17,58 @@ let port: chrome.runtime.Port | null = null;
 let reconnectDelay = RECONNECT_BASE_MS;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let stopProbeBridge: (() => void) | null = null;
+let unsubscribeProbe: (() => void) | null = null;
 
 async function boot(): Promise<void> {
   if (!shouldRun()) return;
 
-  stopProbeBridge = startProbeBridge();
   const settings = await readLocal();
+  document.documentElement.setAttribute(READY_ATTR, '1');
+  applySettings(settings);
+}
+
+function applySettings(settings: LocalSchema): void {
   const origin = location.origin;
   if (!settings.settings.enabled || settings.mutedOrigins.includes(origin)) {
-    stopProbeBridge();
-    stopProbeBridge = null;
+    teardown();
     return;
   }
 
-  connect();
-  document.documentElement.setAttribute(READY_ATTR, '1');
+  if (port === null) connect();
+  if (settings.settings.particleOverlayEnabled) startProbes();
+  else stopProbes();
 
-  if (!settings.settings.showCounter) return;
+  const needsHost = settings.settings.showCounter || settings.settings.particleOverlayEnabled;
+  if (!needsHost) {
+    destroyWidget();
+    return;
+  }
 
-  widget = new GhostCounter(
-    {
-      onExpand: async () => {
-        const response = await send({ type: 'GET_DETAILS' });
-        return response.trackers;
+  if (widget === null) {
+    widget = new GhostCounter(
+      {
+        onExpand: async () => {
+          const response = await send({ type: 'GET_DETAILS' });
+          return response.trackers;
+        },
+        onMuteOrigin: () => {
+          void muteOrigin(origin);
+        },
+        onDisable: () => {
+          void disableCounter();
+        },
       },
-      onMuteOrigin: () => {
-        void muteOrigin(origin);
-      },
-      onDisable: () => {
-        void disableCounter();
-      },
-    },
-    anchorFor(settings.widgetAnchors, origin),
-  );
+      anchorFor(settings.widgetAnchors, origin),
+      settings.settings.showCounter,
+    );
+  } else {
+    widget.setCounterVisible(settings.settings.showCounter);
+  }
+  widget.setOverlayEnabled(settings.settings.particleOverlayEnabled);
 
-  const summary = await send({ type: 'GET_LEDGER' });
-  widget.update(summary.summary);
+  if (settings.settings.showCounter) {
+    void send({ type: 'GET_LEDGER' }).then((summary) => widget?.update(summary.summary));
+  }
 }
 
 /**
@@ -132,13 +148,33 @@ async function muteOrigin(origin: string): Promise<void> {
 
 async function disableCounter(): Promise<void> {
   const state = await readLocal();
-  await writeLocal({ settings: { ...state.settings, showCounter: false } });
+  await writeLocal({
+    settings: { ...state.settings, showCounter: false, particleOverlayEnabled: false },
+  });
   teardown();
 }
 
 function teardown(): void {
+  stopProbes();
+  destroyWidget();
+}
+
+function startProbes(): void {
+  if (stopProbeBridge !== null) return;
+  stopProbeBridge = startProbeBridge();
+  unsubscribeProbe = subscribeToProbeObservations((observation) => {
+    widget?.showProbeObservation(observation);
+  });
+}
+
+function stopProbes(): void {
+  unsubscribeProbe?.();
+  unsubscribeProbe = null;
   stopProbeBridge?.();
   stopProbeBridge = null;
+}
+
+function destroyWidget(): void {
   widget?.destroy();
   widget = null;
 }
@@ -156,6 +192,15 @@ function emptySummary(tabId: number): LedgerSummary {
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') void refresh();
+});
+
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (
+    areaName === 'local' &&
+    ('settings' in changes || 'mutedOrigins' in changes || 'widgetAnchors' in changes)
+  ) {
+    void readLocal().then(applySettings);
+  }
 });
 
 export type { TrackerDetail };

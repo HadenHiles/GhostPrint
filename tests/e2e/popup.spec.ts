@@ -146,7 +146,7 @@ test('clear data empties storage and resets the view', async ({
   expect(after.mutedOrigins).toEqual([]);
   expect(after.ledgerKeys).toBe(0);
   // Defaults are restored rather than leaving the extension in an unconfigured state.
-  expect(after.schemaVersion).toBe(1);
+  expect(after.schemaVersion).toBe(2);
 
   await expect(popup.locator('#week-total')).toHaveText('0');
 });
@@ -170,4 +170,26 @@ test('handles a tab with no recorded data', async ({ context, extensionId }) => 
   const popup = await openPopup(context, extensionId);
   await expect(popup.locator('#page-total')).toHaveText('0');
   await expect(popup.locator('#page-note')).toBeVisible();
+});
+
+test('particle effects are off by default and the popup toggle persists opt-in', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const popup = await openPopup(context, extensionId);
+  const toggle = popup.locator('#particle-overlay');
+  await expect(toggle).not.toBeChecked();
+  await toggle.check();
+
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const local = await chrome.storage.local.get<{
+          settings?: { particleOverlayEnabled?: boolean };
+        }>('settings');
+        return local.settings?.particleOverlayEnabled;
+      }),
+    )
+    .toBe(true);
 });

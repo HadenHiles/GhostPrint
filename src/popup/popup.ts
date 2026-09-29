@@ -1,4 +1,5 @@
 import { send } from '@/background/messaging';
+import { readLocal, writeLocal } from '@/shared/storage';
 import { TrackerCategory } from '@/shared/types';
 import type { CategoryTotals, HistorySummary, LedgerSummary } from '@/shared/types';
 
@@ -25,6 +26,7 @@ const weekLabel = el('week-label');
 const weekEntities = el('week-entities');
 const status = el('status');
 const clearButton = el<HTMLButtonElement>('clear');
+const particleOverlay = el<HTMLInputElement>('particle-overlay');
 
 function categoryEntries(totals: CategoryTotals): [TrackerCategory, string, number][] {
   const values = new Map<TrackerCategory, number>([
@@ -126,17 +128,28 @@ function renderHistory(summary: HistorySummary): void {
 
 async function load(): Promise<void> {
   try {
-    const [ledger, history] = await Promise.all([
+    const [ledger, history, local] = await Promise.all([
       send({ type: 'GET_LEDGER' }),
       send({ type: 'GET_HISTORY' }),
+      readLocal(),
     ]);
     renderPage(ledger.summary);
     renderHistory(history.summary);
+    particleOverlay.checked = local.settings.particleOverlayEnabled;
     document.body.dataset.ghostprintLoaded = 'true';
   } catch {
     status.textContent = 'Unavailable';
   }
 }
+
+particleOverlay.addEventListener('change', () => {
+  void (async () => {
+    const current = await readLocal();
+    await writeLocal({
+      settings: { ...current.settings, particleOverlayEnabled: particleOverlay.checked },
+    });
+  })();
+});
 
 el('options').addEventListener('click', () => {
   void chrome.runtime.openOptionsPage();

@@ -15,6 +15,8 @@ export const WIDGET_CSS = `
 }
 
 .root {
+  position: relative;
+  z-index: 1;
   --bg: #12121a;
   --fg: #e9e9f2;
   --muted: #9292a8;
@@ -27,6 +29,18 @@ export const WIDGET_CSS = `
   color: var(--fg);
   font-size: 12px;
   line-height: 1.35;
+}
+
+.root[hidden] { display: none !important; }
+
+.particle-overlay {
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
 }
 
 @media (prefers-color-scheme: light) {

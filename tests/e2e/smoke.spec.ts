@@ -8,11 +8,11 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
       () =>
         serviceWorker.evaluate(async () => {
           const { settings } = await chrome.storage.local.get('settings');
-          return settings as { enabled: boolean; showCounter: boolean } | undefined;
+          return settings as { enabled: boolean; showCounter: boolean; particleOverlayEnabled: boolean } | undefined;
         }),
       { timeout: 10_000 },
     )
-    .toEqual({ enabled: true, showCounter: true });
+    .toEqual({ enabled: true, showCounter: true, particleOverlayEnabled: false });
 });
 
 test('content script completes a round trip to the service worker', async ({ context }) => {

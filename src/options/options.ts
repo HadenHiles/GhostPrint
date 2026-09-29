@@ -13,8 +13,16 @@ void (async () => {
   enabled.checked = state.settings.enabled;
   showCounter.checked = state.settings.showCounter;
 
-  const persist = () =>
-    writeLocal({ settings: { enabled: enabled.checked, showCounter: showCounter.checked } });
+  const persist = async () => {
+    const current = await readLocal();
+    await writeLocal({
+      settings: {
+        ...current.settings,
+        enabled: enabled.checked,
+        showCounter: showCounter.checked,
+      },
+    });
+  };
 
   enabled.addEventListener('change', () => void persist());
   showCounter.addEventListener('change', () => void persist());

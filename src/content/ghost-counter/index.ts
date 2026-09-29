@@ -1,6 +1,8 @@
 import { anchorStyle, pickAnchor } from './anchor';
+import { ParticleOverlay } from './particle-overlay';
 import { WIDGET_CSS } from './styles';
 import { TrackerCategory } from '@/shared/types';
+import type { ProbeObservation } from '../probes';
 import type { CategoryTotals, LedgerSummary, TrackerDetail } from '@/shared/types';
 import type { WidgetAnchor } from '@/shared/storage';
 
@@ -35,6 +37,7 @@ export class GhostCounter {
   private readonly host: HTMLElement;
   private readonly root: ShadowRoot;
   private readonly container: HTMLDivElement;
+  private readonly particles: ParticleOverlay;
   private readonly callbacks: WidgetCallbacks;
 
   private summary: LedgerSummary | null = null;
@@ -42,7 +45,11 @@ export class GhostCounter {
   private expanded = false;
   private resizeHandler: (() => void) | null = null;
 
-  constructor(callbacks: WidgetCallbacks, preferredAnchor: WidgetAnchor | null) {
+  constructor(
+    callbacks: WidgetCallbacks,
+    preferredAnchor: WidgetAnchor | null,
+    showCounter = true,
+  ) {
     this.callbacks = callbacks;
 
     this.host = document.createElement('ghostprint-counter');
@@ -55,9 +62,16 @@ export class GhostCounter {
     sheet.replaceSync(WIDGET_CSS);
     this.root.adoptedStyleSheets = [sheet];
 
+    const canvas = document.createElement('canvas');
+    canvas.className = 'particle-overlay';
+    canvas.setAttribute('aria-hidden', 'true');
+    this.root.appendChild(canvas);
+    this.particles = new ParticleOverlay(canvas);
+
     this.container = document.createElement('div');
     this.container.className = 'root';
     this.root.appendChild(this.container);
+    this.container.hidden = !showCounter;
 
     this.anchor = pickAnchor(this.host, preferredAnchor);
     this.applyHostStyle();
@@ -77,7 +91,20 @@ export class GhostCounter {
 
   destroy(): void {
     if (this.resizeHandler !== null) window.removeEventListener('resize', this.resizeHandler);
+    this.particles.destroy();
     this.host.remove();
+  }
+
+  setCounterVisible(visible: boolean): void {
+    this.container.hidden = !visible;
+  }
+
+  setOverlayEnabled(enabled: boolean): void {
+    this.particles.setEnabled(enabled);
+  }
+
+  showProbeObservation(observation: ProbeObservation): void {
+    this.particles.show(observation);
   }
 
   /**

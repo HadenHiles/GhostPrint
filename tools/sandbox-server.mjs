@@ -74,7 +74,7 @@ function shopifyPage() {
 }
 
 function probePage() {
-    return shell('Probe sandbox', `<main><h1>Probe target</h1><form><input id="probe-input" type="text"></form></main>
+    return shell('Probe sandbox', `<main><h1>Probe target</h1><form><input id="probe-input" type="text"></form><button id="probe-cta" onclick="this.dataset.clicked='true'">Continue</button></main>
 <script src="https://static.hotjar.com/probe.js"></script>`);
 }
 

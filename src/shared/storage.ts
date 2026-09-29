@@ -1,6 +1,6 @@
 import type { TabLedger } from './types';
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface LocalSchema {
   schemaVersion: number;
@@ -14,13 +14,14 @@ export interface LocalSchema {
 export interface Settings {
   enabled: boolean;
   showCounter: boolean;
+  particleOverlayEnabled: boolean;
 }
 
 export type WidgetAnchor = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
 
 export const DEFAULT_LOCAL: LocalSchema = {
   schemaVersion: SCHEMA_VERSION,
-  settings: { enabled: true, showCounter: true },
+  settings: { enabled: true, showCounter: true, particleOverlayEnabled: false },
   widgetAnchors: {},
   mutedOrigins: [],
 };
@@ -39,18 +40,37 @@ export async function clearAll(): Promise<void> {
   await chrome.storage.local.set(DEFAULT_LOCAL);
 }
 
-export function migrate(raw: Partial<LocalSchema>): LocalSchema {
+export function migrate(
+  raw: Partial<Omit<LocalSchema, 'settings'>> & { settings?: Partial<Settings> },
+): LocalSchema {
   const version = typeof raw.schemaVersion === 'number' ? raw.schemaVersion : 0;
 
   switch (version) {
     case 0:
       // Fresh install or pre-versioned data: fall through to defaults.
       return { ...DEFAULT_LOCAL };
+    case 1:
+      return {
+        ...DEFAULT_LOCAL,
+        ...raw,
+        settings: { ...DEFAULT_LOCAL.settings, ...raw.settings },
+        schemaVersion: SCHEMA_VERSION,
+      };
     case SCHEMA_VERSION:
-      return { ...DEFAULT_LOCAL, ...raw, schemaVersion: SCHEMA_VERSION };
+      return {
+        ...DEFAULT_LOCAL,
+        ...raw,
+        settings: { ...DEFAULT_LOCAL.settings, ...raw.settings },
+        schemaVersion: SCHEMA_VERSION,
+      };
     default:
       // Data written by a newer build; do not attempt to downgrade it.
-      return { ...DEFAULT_LOCAL, ...raw, schemaVersion: SCHEMA_VERSION };
+      return {
+        ...DEFAULT_LOCAL,
+        ...raw,
+        settings: { ...DEFAULT_LOCAL.settings, ...raw.settings },
+        schemaVersion: SCHEMA_VERSION,
+      };
   }
 }
 

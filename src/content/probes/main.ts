@@ -189,11 +189,16 @@ function hostFromStack(stack: string): string | null {
 
 function selectorFor(value: unknown): string | null {
   if (!(value instanceof Element)) return null;
-  const tag = value.tagName.toLowerCase();
-  if (value instanceof HTMLInputElement) {
-    return `${tag}[type="${value.type}"]${nthOfType(value)}`;
+  const parts: string[] = [];
+  let current: Element | null = value;
+  while (current !== null && current !== document.documentElement) {
+    const tag = current.tagName.toLowerCase();
+    const type = current instanceof HTMLInputElement ? `[type="${current.type}"]` : '';
+    parts.push(`${tag}${type}${nthOfType(current)}`);
+    current = current.parentElement;
   }
-  return `${tag}${nthOfType(value)}`;
+  const selector = parts.reverse().join(' > ');
+  return selector.length <= 256 ? selector : null;
 }
 
 function nthOfType(element: Element): string {

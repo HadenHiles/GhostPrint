@@ -19,10 +19,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-01 DOM instrumentation probes |
+| Active task | P2-02 Data Ghost particle overlay |
 | Last updated | 2026-09-29 |
-| Blockers | Phase 1 evidence gates remain; P2-01 30-site compatibility and ≤ 3 ms overhead gates are pending |
-| Next up | Complete P2-01 validation → P2-02 Data Ghost overlay |
+| Blockers | Phase 1 evidence gates remain; P2-01 30-site compatibility and ≤ 3 ms overhead gates, plus P2-02 CPU measurement, are pending |
+| Next up | Measure P2-01/P2-02 performance gates → continue with P2-03 value model |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -490,8 +490,14 @@ extension is disabled or the origin is muted. Privacy and trust-boundary details
 
 ---
 
-### `P2-02` "Data Ghost" particle overlay
+### `P2-02` "Data Ghost" particle overlay — **`[~]` implementation landed; CPU gate pending**
 **Deps:** `P2-01`
+**Implementation:** A default-off popup setting enables the closed-root viewport canvas.
+Effects resolve bounded probe selectors, fade after 1.5 seconds, cap at four effects and
+60 particles, pause while hidden, stop under reduced motion, and cancel RAF when idle or
+disabled. Popup persistence, probe capture, and click-through are covered by the e2e
+suite. The P2-01 site-compatibility/overhead gates and this task's ≤ 2% CPU measurement
+remain open; this implementation status does not waive the dependency gate.
 **Steps**
 1. On a probe event, resolve the target element's bounding box and render a glow/particle effect in an overlay canvas inside the existing closed shadow root (never mutate host DOM).
 2. Use a single `<canvas>` with `requestAnimationFrame`, pausing when `document.hidden` or when no effects are active. Cap at 60 particles, hard-stop the RAF loop when the queue empties.

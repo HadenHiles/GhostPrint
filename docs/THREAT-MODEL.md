@@ -37,6 +37,9 @@ or sends malformed runtime messages to influence probe-driven behavior.
   native call arguments/results and are tested for native-like name, arity, and
   `toString()` output; MAIN-world modification remains detectable by a sufficiently
   determined page.
+- The particle canvas is in the closed root, always uses `pointer-events: none`, caps at
+  four effects/60 particles, pauses while hidden, and disables under reduced-motion
+  preference. Disabling the overlay clears effects and cancels its RAF loop.
 - The service-worker router accepts only known discriminated request types.
 - Settings mutations are only available through the extension options page and its typed
   runtime request.
@@ -131,5 +134,7 @@ shared CDN apex, causing false attribution or a precision collapse.
   `P1-07`).
 - The Phase 2 probe's ≤ 3 ms overhead and 30-site no-breakage gates remain unmeasured; the
   sandbox regression is not representative compatibility evidence.
+- The particle overlay's ≤ 2% sustained CPU gate remains unmeasured on a mid-tier laptop;
+  functional click-through coverage does not establish a CPU percentage.
 - Phase 3 telemetry, marketplace, and buyer integrations are out of scope and must not be
   enabled by merely adding a dependency or endpoint.

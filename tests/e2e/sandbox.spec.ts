@@ -84,8 +84,33 @@ test('Facebook-like sandbox detects trackers without depending on Facebook', asy
     });
 });
 
-test('MAIN-world probe attributes a tracker listener to its host and target', async ({ context }) => {
+test('MAIN-world probe attributes a tracker listener to its host and target', async ({ context, extensionPage }) => {
   const page = await openSandbox(context, '/probe');
+  await extensionPage.evaluate(async () => {
+    const stored = await chrome.storage.local.get<{ settings: Record<string, unknown> }>('settings');
+    await chrome.storage.local.set({
+      schemaVersion: 2,
+      settings: { ...stored.settings, particleOverlayEnabled: true },
+    });
+  });
+  await page.reload();
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const stored = await chrome.storage.local.get<{ settings?: { particleOverlayEnabled?: boolean } }>('settings');
+        return stored.settings?.particleOverlayEnabled;
+      }),
+    )
+    .toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages.map((message) => message.type);
+      }),
+    )
+    .toContain('GHOSTPRINT_PROBE_READY');
   await expect
     .poll(() =>
       page.evaluate(() => {
@@ -96,7 +121,7 @@ test('MAIN-world probe attributes a tracker listener to its host and target', as
             message.type === 'GHOSTPRINT_PROBE_EVENT' &&
             message.api === 'addEventListener' &&
             message.scriptHost === 'static.hotjar.com' &&
-            message.selector === 'input[type="text"]',
+            typeof message.selector === 'string' && message.selector.endsWith('input[type="text"]'),
         );
       }),
     )
@@ -126,6 +151,30 @@ test('MAIN-world probe attributes a tracker listener to its host and target', as
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __probeFunctionShape: unknown[] }).__probeFunctionShape))
     .toEqual(['addEventListener', 2, true]);
+});
+
+test('opted-in particle overlay leaves the page CTA clickable', async ({ context, extensionPage }) => {
+  const page = await openSandbox(context, '/probe');
+  await extensionPage.evaluate(async () => {
+    const stored = await chrome.storage.local.get<{ settings: Record<string, unknown> }>('settings');
+    await chrome.storage.local.set({
+      schemaVersion: 2,
+      settings: { ...stored.settings, particleOverlayEnabled: true },
+    });
+  });
+  await page.reload();
+  await expect(page.locator(WIDGET)).toBeAttached();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages.some((message) => message.type === 'GHOSTPRINT_PROBE_EVENT');
+      }),
+    )
+    .toBe(true);
+  await page.locator('#probe-cta').click();
+  await expect(page.locator('#probe-cta')).toHaveAttribute('data-clicked', 'true');
 });
 
 test('sandbox checkout CTA remains clickable around the widget', async ({ context }) => {

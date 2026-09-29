@@ -148,6 +148,21 @@
             color: var(--muted);
         }
 
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--fg);
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .setting-row input {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--analytics);
+        }
+
         .entity {
             display: flex;
             align-items: baseline;
@@ -237,6 +252,10 @@
             <span class="label" id="week-label">encounters</span>
         </div>
         <div id="week-entities"></div>
+    </section>
+
+    <section aria-label="Visual effects">
+        <label class="setting-row"><input type="checkbox" id="particle-overlay" /> Show probe effects</label>
     </section>
 
     <footer>
