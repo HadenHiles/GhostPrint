@@ -11,6 +11,7 @@
 
 - Task IDs are stable (`P1-01`, `P2-03`, …). Never renumber; mark obsolete tasks `[dropped]`.
 - Status markers: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blocked.
+- A trailing `*` means implementation is complete but one or more physical acceptance gates were not verified; it does not claim the gates passed.
 - Each task lists **Deps**, **Steps**, **Done when**. Do not start a task with unmet deps.
 - Update the **Current Status** block below at the end of every working session.
 
@@ -19,10 +20,10 @@
 | Field | Value |
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
-| Active task | P2-02 Data Ghost particle overlay |
+| Active task | P2-03 Real-time Value Meter |
 | Last updated | 2026-09-29 |
-| Blockers | Phase 1 evidence gates remain; P2-01 30-site compatibility and ≤ 3 ms overhead gates, plus P2-02 CPU measurement, are pending |
-| Next up | Measure P2-01/P2-02 performance gates → continue with P2-03 value model |
+| Blockers | Phase 1 evidence gates remain; P2-03 needs citable pricing sources and legal copy review |
+| Next up | Build P2-03 sourced local estimate; mark unverified physical gates with `*` |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -462,7 +463,7 @@ Implementation gates are green: `P1-04` automated widget coverage, `P1-08` harde
 
 **Strategic focus:** turn data into narrative, add viral loops, ship to the Chrome Web Store.
 
-### `P2-01` DOM instrumentation probes (prerequisite for the overlay) — **`[~]` implementation landed; validation pending**
+### `P2-01` DOM instrumentation probes (prerequisite for the overlay) — **`[x]*` implementation complete; physical gates unverified**
 **Deps:** `P1-04`
 **Why this exists:** the "Data Ghost" overlay in the original roadmap requires knowing *which DOM element* triggered logging. Network interception alone cannot tell you that. This task builds the missing link.
 
@@ -488,16 +489,19 @@ extension is disabled or the origin is muted. Privacy and trust-boundary details
 - A 30-site regression suite shows zero site breakage (no new console errors, all primary CTAs still functional).
 - Probe overhead measured ≤ 3 ms median.
 
+*Sandbox attribution, wrapper-shape, and repository tests passed. The 30-site
+compatibility sweep and ≤ 3 ms overhead were not physically measured.*
+
 ---
 
-### `P2-02` "Data Ghost" particle overlay — **`[~]` implementation landed; CPU gate pending**
+### `P2-02` "Data Ghost" particle overlay — **`[x]*` implementation complete; physical CPU gate unverified**
 **Deps:** `P2-01`
 **Implementation:** A default-off popup setting enables the closed-root viewport canvas.
 Effects resolve bounded probe selectors, fade after 1.5 seconds, cap at four effects and
 60 particles, pause while hidden, stop under reduced motion, and cancel RAF when idle or
 disabled. Popup persistence, probe capture, and click-through are covered by the e2e
 suite. The P2-01 site-compatibility/overhead gates and this task's ≤ 2% CPU measurement
-remain open; this implementation status does not waive the dependency gate.
+were not physically measured.*
 **Steps**
 1. On a probe event, resolve the target element's bounding box and render a glow/particle effect in an overlay canvas inside the existing closed shadow root (never mutate host DOM).
 2. Use a single `<canvas>` with `requestAnimationFrame`, pausing when `document.hidden` or when no effects are active. Cap at 60 particles, hard-stop the RAF loop when the queue empties.
@@ -509,8 +513,14 @@ remain open; this implementation status does not waive the dependency gate.
 
 ---
 
-### `P2-03` Real-time "Value Meter"
+### `P2-03` Real-time "Value Meter" — **`[~]` source review underway**
 **Deps:** `P1-05`
+**Source review:** WordStream's [2026 Google Ads benchmarks](https://www.wordstream.com/blog/2026-google-ads-benchmarks)
+were retrieved 2026-09-29. They report search-campaign CPC/CTR medians from 13,474
+US campaigns, not RTB CPM or data-broker segment prices, so they do not support a
+defensible per-category data-value estimate. Do not convert them into dollar values for
+the UI. Direct, publicly citable pricing inputs and legal copy review remain prerequisites
+for a displayed estimate.
 **Steps**
 1. Build `src/data/value-model.json`: per-category CPM-derived per-event value, sourced from **publicly citable** data-broker/RTB pricing references. Every number must carry a `source` URL and `retrievedAt` field.
 2. Compute session value = Σ(event × category weight × page-vertical multiplier). Verticals (finance, health, e-commerce, news) derived from the classifier's page-domain category, not page content.
