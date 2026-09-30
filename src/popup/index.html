@@ -182,6 +182,13 @@
             min-height: 28px;
         }
 
+        .telemetry-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
         .setting-row {
             display: flex;
             align-items: center;
@@ -299,7 +306,7 @@
         <label class="setting-row"><input type="checkbox" id="particle-overlay" /> Show probe effects</label>
     </section>
 
-    <section aria-labelledby="report-heading">
+    <section id="weekly-report-section" aria-labelledby="report-heading">
         <h2 id="report-heading">Weekly privacy report</h2>
         <p id="report-summary" class="muted"></p>
         <label class="setting-row"><input type="checkbox" id="report-redact" /> Redact tracker domain</label>
@@ -310,6 +317,23 @@
             <button id="report-share" type="button">Share</button>
         </div>
         <p id="report-status" class="muted" role="status"></p>
+    </section>
+
+    <section id="telemetry-consent" aria-labelledby="telemetry-heading">
+        <h2 id="telemetry-heading">Optional usage measurement</h2>
+        <p class="muted">If enabled, GhostPrint sends hourly counts for popup opens, weekly report views and shares,
+            X-Ray toggles, and a four-week return flag. It includes a random cohort token rotated every seven days. It
+            never includes URLs, domains, page content, or timestamps finer than an hour. The endpoint can still observe
+            your IP address and normal connection metadata. Declining does not affect GhostPrint; turning this off stops
+            future sends and clears queued counts.</p>
+        <p id="telemetry-destination" class="muted"></p>
+        <p id="telemetry-consent-status" class="muted" role="status"></p>
+        <div class="telemetry-actions">
+            <button id="telemetry-allow" type="button">Allow anonymous counts</button>
+            <button id="telemetry-decline" type="button">No thanks</button>
+            <button id="telemetry-revoke" type="button" hidden>Turn measurement off</button>
+        </div>
+        <p class="muted">Consent wording is a prototype pending privacy counsel review.</p>
     </section>
 
     <footer>

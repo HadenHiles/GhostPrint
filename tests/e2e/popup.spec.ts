@@ -146,7 +146,7 @@ test('clear data empties storage and resets the view', async ({
   expect(after.mutedOrigins).toEqual([]);
   expect(after.ledgerKeys).toBe(0);
   // Defaults are restored rather than leaving the extension in an unconfigured state.
-  expect(after.schemaVersion).toBe(4);
+  expect(after.schemaVersion).toBe(5);
 
   await expect(popup.locator('#week-total')).toHaveText('0');
 });
@@ -232,4 +232,61 @@ test('renders and redacts the local weekly share card', async ({ context, extens
     popup.locator('#report-download').click(),
   ]);
   expect(download.suggestedFilename()).toBe('ghostprint-weekly-report.png');
+});
+
+test('count-only telemetry is off by default and refusal removes queued state', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const popup = await openPopup(context, extensionId);
+  await expect(popup.locator('#telemetry-consent-status')).toHaveText('Measurement is off until you choose.');
+  await expect(popup.locator('#telemetry-destination')).toHaveText(
+    'Telemetry is not configured in this build; no usage data will be sent.',
+  );
+  await expect(popup.locator('#telemetry-allow')).toBeDisabled();
+
+  await extensionPage.evaluate(async () => {
+    await chrome.storage.local.set({
+      telemetryPending: [{ cohort: '0123456789abcdef0123456789abcdef', hourBucket: 42, counts: { popup_opened: 1 } }],
+      telemetryCohort: { week: 1, token: '0123456789abcdef0123456789abcdef' },
+    });
+  });
+  await popup.locator('#telemetry-decline').click();
+  await expect(popup.locator('#telemetry-consent-status')).toHaveText('Measurement is off. You can opt in later.');
+
+  const stored = await extensionPage.evaluate(async () => {
+    const local = await chrome.storage.local.get(null);
+    return {
+      consent: local.telemetryConsent as string,
+      pending: local.telemetryPending as unknown[],
+      cohort: local.telemetryCohort,
+    };
+  });
+  expect(stored).toEqual({ consent: 'declined', pending: [], cohort: null });
+});
+
+test('telemetry consent defaults off and refusal clears pending counts', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const popup = await openPopup(context, extensionId);
+  await expect(popup.locator('#telemetry-consent-status')).toHaveText('Measurement is off until you choose.');
+  await expect(popup.locator('#telemetry-destination')).toHaveText(
+    'Telemetry is not configured in this build; no usage data will be sent.',
+  );
+  await expect(popup.locator('#telemetry-allow')).toBeDisabled();
+  await popup.locator('#telemetry-decline').click();
+  await expect(popup.locator('#telemetry-consent-status')).toHaveText('Measurement is off. You can opt in later.');
+
+  const state = await extensionPage.evaluate(async () => {
+    const local = await chrome.storage.local.get(null);
+    return {
+      consent: local.telemetryConsent as string,
+      pending: local.telemetryPending as unknown[],
+      cohort: local.telemetryCohort,
+    };
+  });
+  expect(state).toEqual({ consent: 'declined', pending: [], cohort: null });
 });

@@ -4,9 +4,11 @@
 
 ## Summary
 
-GhostPrint processes tracker observations locally in the browser. During Phase 1 and
-Phase 2, GhostPrint does not transmit browsing data, tracker data, analytics, crash
-reports, or identifiers to GhostPrint or any other server.
+GhostPrint processes tracker observations locally in the browser. It never transmits
+browsing data, tracker data, crash reports, URLs, domains, or page content. Optional
+count-only telemetry is sent only after explicit consent and only in builds configured
+with an HTTPS telemetry endpoint. Consent wording is a prototype and has not received
+counsel review; do not enable it in a public release until reviewed.
 
 ## What GhostPrint observes
 
@@ -63,7 +65,10 @@ deletes this report.
 Settings include whether detection, the counter, the default-off particle overlay, and
 default-off weekly report notifications are enabled, muted origins, and an optional
 per-origin widget anchor. The default-off Global Privacy Control setting and its hostname
-exceptions also remain on the device.
+exceptions also remain on the device. Telemetry consent, a random cohort token rotated
+every seven days, hour-bucketed metric counts, installation date, and the one-time W4
+marker are stored locally. Refusing or revoking consent clears queued counts and the
+cohort token.
 
 The weekly report is computed from existing aggregate history. It does not retain which
 first-party site caused a tracker observation; its highlight is a third-party tracker
@@ -85,15 +90,28 @@ removed by a local daily alarm.
 
 ## Network and telemetry
 
-GhostPrint itself does not issue network requests. The MAIN-world probe wraps selected
-page APIs transparently to observe calls; it does not invoke them on the page's behalf or
-change their arguments or results. CI scans the built `dist/` directory for runtime
-network calls. Build-time tooling may download an upstream filter list, but that tooling
-is not included in the extension.
+No telemetry request is sent when consent is undecided or declined, or when the build has
+no HTTPS endpoint configured. With consent, the extension batches counts for
+`weekly_report_viewed`, `share_clicked`, `share_completed`, `xray_toggled`,
+`popup_opened`, and `w4_retained`. Each batch contains only an allow-listed metric count,
+a random token rotated every seven days, and a timestamp rounded to the hour. It contains
+no URLs, domains, page content, or persistent installation ID. GhostPrint does not set
+cookies or send a referrer. The telemetry host will still receive ordinary connection
+metadata, including the source IP address.
 
-There is no telemetry, account system, remote configuration, or crash-reporting endpoint
-in the MVP. Any future network feature must be separately opt-in, documented, and gated
-by a new privacy review and threat-model update.
+The provided Cloudflare Worker accepts only the configured extension origin and
+`count-only-v1` purpose marker, validates the schema, and writes batches to R2. Its daily
+cleanup removes objects older than 30 days. Deployment is not configured in this
+repository, so the current build sends no telemetry. Before deployment, the sink operator
+must set the exact extension origin, configure Cloudflare rate limiting, and review
+platform/IP log retention. The extension-Origin check is CORS, not authentication;
+non-browser clients may forge submissions, so metrics are directional. The rotating
+cohort cannot link an installation across weeks, so `w4_retained` is approximate rather
+than individual cohort retention.
+
+The MAIN-world probe wraps selected page APIs only to observe calls; it does not invoke
+them on the page's behalf or change their arguments/results. Build-time tooling may
+download an upstream filter list, but that tooling is not included in the extension.
 
 ## Third-party data
 

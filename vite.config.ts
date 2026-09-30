@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { env } from 'node:process';
 
 const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
 
@@ -8,6 +9,9 @@ const r = (p: string) => fileURLToPath(new URL(p, import.meta.url));
  * Content scripts are built separately by vite.content.config.ts as IIFE.
  */
 export default defineConfig({
+  define: {
+    __GHOSTPRINT_TELEMETRY_ENDPOINT__: JSON.stringify(env.VITE_TELEMETRY_ENDPOINT ?? ''),
+  },
   root: r('./src'),
   publicDir: r('./src/public'),
   resolve: { alias: { '@': r('./src') } },

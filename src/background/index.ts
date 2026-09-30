@@ -1,6 +1,8 @@
 import { installRouter } from './messaging';
 import { installRequestMonitor } from './request-monitor';
 import { installGpcRuleSync } from './gpc';
+import { installTelemetry, recordTelemetryMetric } from './telemetry';
+import { TELEMETRY_ENDPOINT, isSecureTelemetryEndpoint } from '@/shared/telemetry-client';
 import {
   flush as flushHistory,
   getSummary as getHistorySummary,
@@ -15,13 +17,18 @@ import type { Request } from '@/shared/types';
 chrome.runtime.onInstalled.addListener(() => {
   void (async () => {
     const current = await readLocal();
-    await writeLocal({ ...DEFAULT_LOCAL, ...current });
+    await writeLocal({
+      ...DEFAULT_LOCAL,
+      ...current,
+      installedAt: current.installedAt || Date.now(),
+    });
   })();
 });
 
 installRequestMonitor();
 installHistory();
 installGpcRuleSync();
+installTelemetry();
 
 chrome.notifications.onClicked.addListener((notificationId) => {
   if (notificationId !== 'ghostprint-weekly-report') return;
@@ -55,6 +62,21 @@ installRouter(async (request: Request, sender) => {
 
     case 'GET_WEEKLY_REPORT':
       return { type: 'WEEKLY_REPORT', report: await getWeeklyReport() };
+
+    case 'TRACK_TELEMETRY':
+      return { type: 'TRACKED', accepted: await recordTelemetryMetric(request.metric) };
+
+    case 'GET_TELEMETRY_STATUS': {
+      let destination: string | null = null;
+      try {
+        if (isSecureTelemetryEndpoint(TELEMETRY_ENDPOINT)) {
+          destination = new URL(TELEMETRY_ENDPOINT).hostname;
+        }
+      } catch {
+        destination = null;
+      }
+      return { type: 'TELEMETRY_STATUS', endpointConfigured: destination !== null, destination };
+    }
 
     case 'CLEAR_ALL_DATA':
       clear();

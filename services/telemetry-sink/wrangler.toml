@@ -1,0 +1,10 @@
+name = "ghostprint-telemetry-sink"
+main = "src/index.ts"
+compatibility_date = "2026-09-29"
+
+[triggers]
+crons = ["0 4 * * *"]
+
+[[r2_buckets]]
+binding = "EVENTS"
+bucket_name = "ghostprint-telemetry-events"

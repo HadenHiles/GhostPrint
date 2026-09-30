@@ -1,5 +1,6 @@
 import type { ErrorResponse, Push, Request, ResponseFor } from '@/shared/types';
 import { PORT_NAME } from '@/shared/types';
+import { isTelemetryMetric } from '@/shared/telemetry-types';
 
 type Handler = (request: Request, sender: chrome.runtime.MessageSender) => Promise<unknown>;
 
@@ -51,13 +52,17 @@ export async function send<R extends Request>(request: R): Promise<ResponseFor<R
 function isRequest(value: unknown): value is Request {
   if (typeof value !== 'object' || value === null) return false;
 
-  const type = (value as { type?: unknown }).type;
+  const request = value as { type?: unknown; metric?: unknown };
+  const type = request.type;
+  if (type === 'TRACK_TELEMETRY') return isTelemetryMetric(request.metric);
   return (
     type === 'PING' ||
     type === 'GET_LEDGER' ||
     type === 'GET_DETAILS' ||
     type === 'GET_HISTORY' ||
     type === 'GET_WEEKLY_REPORT' ||
+    type === 'TRACK_TELEMETRY' ||
+    type === 'GET_TELEMETRY_STATUS' ||
     type === 'CLEAR_ALL_DATA'
   );
 }

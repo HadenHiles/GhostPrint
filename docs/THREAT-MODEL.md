@@ -1,9 +1,9 @@
 # GhostPrint MVP Threat Model
 
-**Status:** Phase 2 probe review in progress · 2026-09-29
-**Scope:** Manifest V3 extension through `P2-01`, including the MAIN-world probe,
-isolated content script, service worker, popup, options page, local storage, bundled
-dictionary, and build output.
+**Status:** Phase 2 review in progress · 2026-09-29
+**Scope:** Manifest V3 extension through `P2-06` implementation, including the
+MAIN-world probe, service worker, popup, options page, local storage, telemetry Worker
+contract, bundled dictionary, and build output.
 
 ## Security boundaries
 
@@ -15,7 +15,7 @@ dictionary, and build output.
 | Service worker | Extension-controlled | Owns classification, ledgers, storage, and the only privileged request listener. |
 | Popup/options pages | Extension-controlled | Request only typed data from the service worker; render with `textContent`. |
 | Bundled tracker data | Build-time input | Validate schema, entity references, categories, and bundle size before shipping. |
-| Network | Disabled at runtime | CI must reject network primitives from `dist/`. |
+| Network | Disabled unless the user opts into count-only telemetry in an endpoint-configured build | CI permits only the explicitly consent-gated telemetry client; reject every other outbound call. |
 
 ## Abuse cases and controls
 
@@ -85,8 +85,20 @@ activity.
 
 **Controls:**
 
-- No runtime network API is used in extension code.
-- `tools/check-egress.mjs` scans JavaScript and HTML in `dist/` for runtime network calls.
+- Runtime egress is disabled when telemetry consent is undecided/declined or no HTTPS
+  endpoint is configured. The one permitted fetch is in `src/shared/telemetry-client.ts`
+  and requires granted consent, HTTPS, omitted credentials, no referrer, and the
+  `count-only-v1` purpose marker.
+- The payload schema accepts only six metric counters, a random seven-day cohort token,
+  and an hour bucket. It rejects unknown keys, URLs, domains, content, and stable IDs.
+- The Worker accepts only the configured extension origin and count-only purpose marker,
+  stores opaque hourly batches in R2, and expires them after 30 days. Network operators
+  may still process IP and connection metadata; this is disclosed in consent. Cloudflare
+  rate limiting and provider log-retention controls must be configured before deployment.
+- Origin checking is CORS, not authentication; non-browser clients can forge the header,
+  so fabricated counts are possible and telemetry is directional rather than fraud-proof.
+- `tools/check-egress.mjs` scans JavaScript and HTML in `dist/`, allowing only that
+  guarded telemetry fetch and rejecting all other network calls.
 - The CI workflow runs the egress check after every build.
 - Tracker-list downloads are limited to build-time tooling and never ship in `dist/`.
 
@@ -129,7 +141,7 @@ shared CDN apex, causing false attribution or a precision collapse.
 ## Source audit checklist
 
 - [x] Probe bridge validates source, origin, nonce, shape, and third-party classification; forged observations cannot invoke privileged actions.
-- [x] No outbound network calls; the MAIN-world probe only wraps page-owned network APIs.
+- [x] No unapproved outbound calls; the only permitted call is the opt-in count-only telemetry client.
 - [x] No HTML injection sinks in extension source.
 - [x] No raw URL, request body, header, or page content in local history.
 - [x] Unknown trackers remain explicitly unknown; no guessed corporate attribution.
@@ -148,5 +160,7 @@ shared CDN apex, causing false attribution or a precision collapse.
   sandbox regression is not representative compatibility evidence.
 - The particle overlay's ≤ 2% sustained CPU gate remains unmeasured on a mid-tier laptop;
   functional click-through coverage does not establish a CPU percentage.
+- The telemetry Worker has not been deployed, consent wording has not received counsel
+  review, and cohort-only W4 retention is approximate rather than user-level measurement.
 - Phase 3 telemetry, marketplace, and buyer integrations are out of scope and must not be
   enabled by merely adding a dependency or endpoint.

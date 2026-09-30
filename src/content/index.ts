@@ -201,6 +201,7 @@ function stopProbes(): void {
 
 function toggleXray(): void {
   xrayEnabled = !xrayEnabled;
+  void send({ type: 'TRACK_TELEMETRY', metric: 'xray_toggled' }).catch(() => {});
   if (xrayEnabled) startProbes();
   else if (!particleOverlayEnabled) stopProbes();
   void readLocal().then(applySettings);

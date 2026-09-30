@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Enforces the Phase 1/2 zero-egress constraint mechanically: shipped code may not
- * issue requests. Passive MAIN-world wrappers may refer to page APIs without invoking
- * them. Update this only alongside an explicit, consented opt-in gate (see ROADMAP
- * P2-06 / P3-00).
+ * Enforces local-first egress: no outbound calls are permitted except the single
+ * count-only telemetry client, which requires explicit consent and a configured HTTPS
+ * endpoint. Passive MAIN-world wrappers may refer to page APIs without invoking them.
+ * Update this only with an explicit consent/privacy review.
  */
 const FORBIDDEN = [
     { pattern: /\bfetch\s*\(/, name: 'fetch()' },
@@ -32,8 +32,21 @@ for (const file of walk(DIST)) {
     if (!/\.(js|html)$/.test(file)) continue;
     const source = readFileSync(file, 'utf8');
     for (const { pattern, name } of FORBIDDEN) {
-        if (pattern.test(source)) violations.push(`${file.slice(DIST.length + 1)}: ${name}`);
+        if (!pattern.test(source)) continue;
+        if (name === 'fetch()' && isConsentedTelemetryFetch(source)) continue;
+        violations.push(`${file.slice(DIST.length + 1)}: ${name}`);
     }
+}
+
+function isConsentedTelemetryFetch(source) {
+    const calls = source.match(/\bfetch\s*\(/g) ?? [];
+    return calls.length === 1 &&
+        source.includes('no-referrer') &&
+        source.includes('credentials') &&
+        source.includes('omit') &&
+        source.includes('count-only-v1') &&
+        source.includes('granted') &&
+        source.includes('https:');
 }
 
 if (violations.length > 0) {
@@ -42,4 +55,4 @@ if (violations.length > 0) {
     process.exit(1);
 }
 
-console.log('Egress check passed: no outbound network calls in dist/.');
+console.log('Egress check passed: no unapproved outbound calls in dist/.');

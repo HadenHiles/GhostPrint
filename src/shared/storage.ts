@@ -1,6 +1,7 @@
 import type { TabLedger } from './types';
+import type { TelemetryBatch, TelemetryCohort, TelemetryConsent } from './telemetry-types';
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export interface LocalSchema {
   schemaVersion: number;
@@ -11,6 +12,11 @@ export interface LocalSchema {
   mutedOrigins: string[];
   /** Hostnames exempt from the Global Privacy Control request header. */
   gpcExceptions: string[];
+  telemetryConsent: TelemetryConsent;
+  telemetryCohort: TelemetryCohort | null;
+  telemetryPending: TelemetryBatch[];
+  installedAt: number;
+  w4TelemetryRecorded: boolean;
 }
 
 export interface Settings {
@@ -35,6 +41,11 @@ export const DEFAULT_LOCAL: LocalSchema = {
   widgetAnchors: {},
   mutedOrigins: [],
   gpcExceptions: [],
+  telemetryConsent: 'undecided',
+  telemetryCohort: null,
+  telemetryPending: [],
+  installedAt: 0,
+  w4TelemetryRecorded: false,
 };
 
 export async function readLocal(): Promise<LocalSchema> {
@@ -63,6 +74,7 @@ export function migrate(
     case 1:
     case 2:
     case 3:
+    case 4:
     case SCHEMA_VERSION:
       return {
         ...DEFAULT_LOCAL,

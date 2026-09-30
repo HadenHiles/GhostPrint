@@ -39,9 +39,27 @@ const reportStatus = el('report-status');
 const reportDownload = el<HTMLButtonElement>('report-download');
 const reportCopy = el<HTMLButtonElement>('report-copy');
 const reportShare = el<HTMLButtonElement>('report-share');
+const telemetryConsentStatus = el('telemetry-consent-status');
+const telemetryDestination = el('telemetry-destination');
+const telemetryAllow = el<HTMLButtonElement>('telemetry-allow');
+const telemetryDecline = el<HTMLButtonElement>('telemetry-decline');
+const telemetryRevoke = el<HTMLButtonElement>('telemetry-revoke');
+const weeklyReportSection = el('weekly-report-section');
 let weeklyReport: WeeklyReport | null = null;
 let reportBlob: Blob | null = null;
 let previewUrl: string | null = null;
+let telemetryConsent: 'undecided' | 'declined' | 'granted' = 'undecided';
+let telemetryEndpointConfigured = false;
+let weeklyReportViewed = false;
+
+const reportObserver = new IntersectionObserver((entries) => {
+  if (weeklyReportViewed || !entries.some((entry) => entry.isIntersecting)) return;
+  weeklyReportViewed = true;
+  reportObserver.disconnect();
+  recordMetric('weekly_report_viewed');
+});
+reportObserver.observe(weeklyReportSection);
+
 function categoryEntries(totals: CategoryTotals): [TrackerCategory, string, number][] {
   const values = new Map<TrackerCategory, number>([
     [TrackerCategory.Advertising, totals[TrackerCategory.Advertising]],
@@ -142,11 +160,12 @@ function renderHistory(summary: HistorySummary): void {
 
 async function load(): Promise<void> {
   try {
-    const [ledger, history, details, report, local] = await Promise.all([
+    const [ledger, history, details, report, telemetry, local] = await Promise.all([
       send({ type: 'GET_LEDGER' }),
       send({ type: 'GET_HISTORY' }),
       send({ type: 'GET_DETAILS' }),
       send({ type: 'GET_WEEKLY_REPORT' }),
+      send({ type: 'GET_TELEMETRY_STATUS' }),
       readLocal(),
     ]);
     renderPage(ledger.summary);
@@ -160,9 +179,16 @@ async function load(): Promise<void> {
     }).format(value.amount);
     weeklyReport = report.report;
     renderWeeklySummary(weeklyReport);
+    telemetryConsent = local.telemetryConsent;
+    telemetryEndpointConfigured = telemetry.endpointConfigured;
+    telemetryDestination.textContent = telemetry.endpointConfigured
+      ? `Telemetry destination: ${telemetry.destination}`
+      : 'Telemetry is not configured in this build; no usage data will be sent.';
+    renderTelemetryConsent();
     particleOverlay.checked = local.settings.particleOverlayEnabled;
     document.body.dataset.ghostprintLoaded = 'true';
     void updateReportCard();
+    recordMetric('popup_opened');
   } catch {
     status.textContent = 'Unavailable';
   }
@@ -179,8 +205,13 @@ particleOverlay.addEventListener('change', () => {
 
 reportRedact.addEventListener('change', () => void updateReportCard());
 
+telemetryAllow.addEventListener('click', () => void setTelemetryConsent('granted'));
+telemetryDecline.addEventListener('click', () => void setTelemetryConsent('declined'));
+telemetryRevoke.addEventListener('click', () => void setTelemetryConsent('declined'));
+
 reportDownload.addEventListener('click', () => {
   if (reportBlob === null) return;
+  recordMetric('share_clicked');
   const url = URL.createObjectURL(reportBlob);
   const link = document.createElement('a');
   link.href = url;
@@ -188,11 +219,13 @@ reportDownload.addEventListener('click', () => {
   link.click();
   URL.revokeObjectURL(url);
   reportStatus.textContent = 'Report downloaded.';
+  recordMetric('share_completed');
 });
 
 reportCopy.addEventListener('click', () => {
   void (async () => {
     if (reportBlob === null) return;
+    recordMetric('share_clicked');
     if (!('ClipboardItem' in window) || !navigator.clipboard?.write) {
       reportStatus.textContent = 'Image copy is not available in this browser.';
       return;
@@ -200,6 +233,7 @@ reportCopy.addEventListener('click', () => {
     const writeItems = navigator.clipboard.write.bind(navigator.clipboard);
     await writeItems([new ClipboardItem({ 'image/png': reportBlob })]);
     reportStatus.textContent = 'Report image copied.';
+    recordMetric('share_completed');
   })().catch(() => {
     reportStatus.textContent = 'Could not copy the report image.';
   });
@@ -208,14 +242,17 @@ reportCopy.addEventListener('click', () => {
 reportShare.addEventListener('click', () => {
   void (async () => {
     if (reportBlob === null || weeklyReport === null) return;
+    recordMetric('share_clicked');
     const file = new File([reportBlob], 'ghostprint-weekly-report.png', { type: 'image/png' });
     const text = buildShareText(weeklyReport, reportRedact.checked);
     if (navigator.canShare?.({ files: [file] }) && navigator.share) {
       await navigator.share({ title: 'GhostPrint weekly privacy report', text, files: [file] });
       reportStatus.textContent = 'Share sheet opened.';
+      recordMetric('share_completed');
     } else if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
       reportStatus.textContent = 'Share text copied; image sharing is unavailable here.';
+      recordMetric('share_completed');
     } else {
       reportStatus.textContent = 'Sharing is unavailable in this browser.';
     }
@@ -229,6 +266,43 @@ function renderWeeklySummary(report: WeeklyReport): void {
     ? `${report.deltaCount >= 0 ? '+' : ''}${report.deltaCount} encounters`
     : `${report.deltaPercent >= 0 ? '+' : ''}${Math.round(report.deltaPercent)}%`;
   reportSummary.textContent = `${report.totalTrackers} tracker encounters · ${delta} vs. previous week`;
+}
+
+function renderTelemetryConsent(): void {
+  telemetryAllow.hidden = telemetryConsent === 'granted';
+  telemetryAllow.disabled = !telemetryEndpointConfigured;
+  telemetryDecline.hidden = telemetryConsent !== 'undecided';
+  telemetryRevoke.hidden = telemetryConsent !== 'granted';
+  telemetryConsentStatus.textContent =
+    telemetryConsent === 'granted'
+      ? 'Anonymous count measurement is on.'
+      : telemetryConsent === 'declined'
+        ? 'Measurement is off. You can opt in later.'
+        : 'Measurement is off until you choose.';
+}
+
+async function setTelemetryConsent(consent: 'granted' | 'declined'): Promise<void> {
+  const current = await readLocal();
+  if (consent === 'granted') {
+    const status = await send({ type: 'GET_TELEMETRY_STATUS' });
+    if (!status.endpointConfigured) {
+      telemetryConsentStatus.textContent = 'Telemetry cannot be enabled because this build has no configured HTTPS sink.';
+      return;
+    }
+  }
+
+  telemetryConsent = consent;
+  await writeLocal({
+    telemetryConsent: consent,
+    telemetryPending: [],
+    telemetryCohort: consent === 'granted' ? current.telemetryCohort : null,
+    w4TelemetryRecorded: consent === 'granted' ? current.w4TelemetryRecorded : false,
+  });
+  renderTelemetryConsent();
+}
+
+function recordMetric(metric: 'weekly_report_viewed' | 'share_clicked' | 'share_completed' | 'popup_opened'): void {
+  void send({ type: 'TRACK_TELEMETRY', metric }).catch(() => {});
 }
 
 async function updateReportCard(): Promise<void> {

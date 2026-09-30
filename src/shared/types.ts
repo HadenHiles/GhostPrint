@@ -1,4 +1,5 @@
 /** Single source of truth for cross-context types. Never redeclare these elsewhere. */
+import type { TelemetryMetric } from './telemetry-types';
 
 export enum TrackerCategory {
   Advertising = 0,
@@ -118,6 +119,8 @@ export type Request =
   | { type: 'GET_DETAILS'; tabId?: number }
   | { type: 'GET_HISTORY'; days?: number }
   | { type: 'GET_WEEKLY_REPORT' }
+  | { type: 'TRACK_TELEMETRY'; metric: TelemetryMetric }
+  | { type: 'GET_TELEMETRY_STATUS' }
   | { type: 'CLEAR_ALL_DATA' };
 
 export type ResponseFor<R extends Request> = R extends { type: 'PING' }
@@ -130,9 +133,13 @@ export type ResponseFor<R extends Request> = R extends { type: 'PING' }
         ? { type: 'HISTORY'; summary: HistorySummary }
           : R extends { type: 'GET_WEEKLY_REPORT' }
             ? { type: 'WEEKLY_REPORT'; report: WeeklyReport }
-            : R extends { type: 'CLEAR_ALL_DATA' }
-              ? { type: 'CLEARED' }
-          : never;
+            : R extends { type: 'TRACK_TELEMETRY' }
+              ? { type: 'TRACKED'; accepted: boolean }
+              : R extends { type: 'GET_TELEMETRY_STATUS' }
+                ? { type: 'TELEMETRY_STATUS'; endpointConfigured: boolean; destination: string | null }
+                : R extends { type: 'CLEAR_ALL_DATA' }
+                  ? { type: 'CLEARED' }
+                  : never;
 
 /** Pushed from the SW to connected ports. */
 export type Push =

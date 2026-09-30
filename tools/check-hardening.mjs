@@ -26,6 +26,7 @@ const ALLOWED_BRIDGE_CALLS = new Map([
     ['src/content/probes/index.ts', new Map([['window.postMessage()', 2], ['page message listener', 1]])],
     ['src/content/index.ts', new Map([['window.postMessage()', 1]])],
 ]);
+const TELEMETRY_SOURCE = 'src/shared/telemetry-client.ts';
 
 function* walk(directory) {
     for (const entry of readdirSync(directory)) {
@@ -44,7 +45,18 @@ for (const file of walk(SRC)) {
     for (const { pattern, name } of FORBIDDEN_SOURCE) {
         const count = source.match(pattern)?.length ?? 0;
         const allowed = allowedCalls?.get(name) ?? 0;
-        if (count > allowed || (allowed > 0 && count !== allowed)) {
+        const consentedTelemetry =
+            name === 'fetch()' &&
+            relative === TELEMETRY_SOURCE &&
+            count === 1 &&
+            source.includes("consent !== 'granted'") &&
+            source.includes('isSecureTelemetryEndpoint(endpoint)') &&
+            source.includes('credentials:') &&
+            source.includes("'omit'") &&
+            source.includes('referrerPolicy:') &&
+            source.includes("'no-referrer'") &&
+            source.includes("'count-only-v1'");
+        if (!consentedTelemetry && (count > allowed || (allowed > 0 && count !== allowed))) {
             violations.push(`${relative}: ${name} (${count} occurrence(s); ${allowed} allowed)`);
         }
     }
@@ -84,4 +96,4 @@ if (violations.length > 0) {
     process.exit(1);
 }
 
-console.log('Hardening check passed: source, manifest, and privacy docs are within local-only policy.');
+console.log('Hardening check passed: source, manifest, and privacy docs follow the local-first policy.');

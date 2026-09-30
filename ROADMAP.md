@@ -22,8 +22,8 @@
 | Phase | Phase 2 — V1 Public Launch |
 | Active task | P2-06 telemetry sink and consent review |
 | Last updated | 2026-09-29 |
-| Blockers | P2-06 needs a provisioned telemetry sink and reviewed consent wording; Phase 1/P2-03 release gates remain unverified |
-| Next up | Provision P2-06 sink and consent copy; P2-07a GPC is implemented* and 2b remains legally deferred |
+| Blockers | P2-06 Worker deployment, extension-origin allow-list, Cloudflare rate limit, and counsel approval remain; Phase 1/P2-03 release gates remain unverified |
+| Next up | Deploy/configure P2-06 and obtain counsel review; implement its measurement dashboard |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -584,13 +584,22 @@ not physically verified.*
 
 ---
 
-### `P2-06` Attribution & organic loop measurement — **`[!]` blocked: telemetry sink and consent review unavailable**
+### `P2-06` Attribution & organic loop measurement — **`[~]` client, consent prototype, and sink implementation landed; deployment/review pending**
 **Deps:** `P2-05`
 **Original success criterion:** *≥ 3% of active users share or invite*
 
-**Blocker:** No telemetry endpoint or hosting configuration exists in the repository,
-and consent wording requires review before egress. Do not invent a destination or send
-data to a placeholder. This does not block independent P2-07 implementation.
+**Implementation:** The default-off consent prompt, seven-day cohort token, hourly count
+queue, six metric hooks, and consent-gated HTTPS client are implemented. The Cloudflare
+Worker validates the schema, enforces a configured extension origin, writes 30-day R2
+objects, and runs a daily expiry sweep; see [services/telemetry-sink/README.md](services/telemetry-sink/README.md).
+`VITE_TELEMETRY_ENDPOINT` defaults empty, so the checked-in build sends nothing and the
+Allow button remains disabled.
+
+**Remaining:** Configure the published extension origin and Cloudflare rate limit,
+deploy the Worker, obtain counsel approval for the consent wording, and build the
+measurement dashboard. The Origin check is not authentication; counts can be spoofed.
+Because the cohort rotates weekly, W4 retention is approximate rather than linkable to an
+individual installation; report that limitation.
 
 **Steps**
 1. Define the minimal metric set: `weekly_report_viewed`, `share_clicked`, `share_completed`, `xray_toggled`, `popup_opened`, `w4_retained`.
