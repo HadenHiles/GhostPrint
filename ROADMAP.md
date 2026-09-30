@@ -21,9 +21,9 @@
 |---|---|
 | Phase | Phase 2 — V1 Public Launch |
 | Active task | P2-06 telemetry sink and consent review |
-| Last updated | 2026-09-29 |
+| Last updated | 2026-09-30 |
 | Blockers | P2-06 Worker deployment, extension-origin allow-list, Cloudflare rate limit, and counsel approval remain; Phase 1/P2-03 release gates remain unverified |
-| Next up | Deploy/configure P2-06 and obtain counsel review; implement its measurement dashboard |
+| Next up | Deploy/configure P2-06 and obtain counsel review; then verify P2-06 and remaining Phase 1/P2-03 release gates |
 
 **Phase 0 complete.** Toolchain, MV3 skeleton, and domain primitives verified.
 **`P1-01`/`P1-02` complete** with a documented scope reduction — see
@@ -588,7 +588,7 @@ not physically verified.*
 
 ---
 
-### `P2-06` Attribution & organic loop measurement — **`[~]` client, consent prototype, and sink implementation landed; deployment/review pending**
+### `P2-06` Attribution & organic loop measurement — **`[~]` client, consent flow, sink, and local reporting implemented; deployment/review pending**
 **Deps:** `P2-05`
 **Original success criterion:** *≥ 3% of active users share or invite*
 
@@ -600,8 +600,11 @@ objects, and runs a daily expiry sweep; see [services/telemetry-sink/README.md](
 Allow button remains disabled.
 
 **Remaining:** Configure the published extension origin and Cloudflare rate limit,
-deploy the Worker, obtain counsel approval for the consent wording, and build the
-measurement dashboard. The Origin check is not authentication; counts can be spoofed.
+deploy the Worker, and obtain counsel approval for the consent wording. The local
+dashboard consumes exported Worker payloads plus manually entered Web Store install and
+UTM landing counts. It reports event-based share completion, referral visits per install,
+and consented W4 returns; these are directional proxies, not unique-user share-rate or
+linked-cohort retention. The Origin check is not authentication; counts can be spoofed.
 Because the cohort rotates weekly, W4 retention is approximate rather than linkable to an
 individual installation; report that limitation.
 

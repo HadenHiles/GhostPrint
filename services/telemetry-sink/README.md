@@ -35,3 +35,26 @@ UTC seven-day boundary. Consequently, `w4_retained` is a count of devices that r
 after four weeks and consent to telemetry at that point; it cannot be joined to an
 individual install cohort, so W4 retention is approximate and must be reported with
 that limitation.
+
+## Local Reporting
+
+Export Worker payload bodies from R2 as individual JSON files (or a JSON array), then
+run the report from the repository root. Repeat `--input` for each file; use UTC dates
+and aggregate counts from Chrome Web Store stats and the UTM landing page for the same
+period. `--prior-installs` is the install count from the period four weeks earlier.
+
+```sh
+npm run telemetry:dashboard -- \
+   --input ./telemetry-export/events.json \
+   --from 2026-09-01 \
+   --through 2026-09-07 \
+   --installs 1200 \
+   --utm-visits 38 \
+   --prior-installs 900 \
+   --output ./telemetry-report.md
+```
+
+The report separates event share-completion rate from UTM visits per install; neither
+is a unique-user share rate. W4 is an approximate consented-return proxy, not linked
+cohort retention. Imports are local and make no network requests. Do not include the
+same R2 object more than once.

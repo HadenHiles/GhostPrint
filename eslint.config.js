@@ -11,7 +11,7 @@ export default tseslint.config(
         languageOptions: {
             parserOptions: {
                 projectService: {
-                    allowDefaultProject: ['eslint.config.js', 'tools/*.mjs', 'tools/sources/*.mjs'],
+                    allowDefaultProject: ['eslint.config.js', 'tools/*.mjs', 'tools/sources/*.mjs', 'tests/unit/*.test.mjs'],
                 },
                 tsconfigRootDir: import.meta.dirname,
             },
@@ -56,11 +56,11 @@ export default tseslint.config(
         },
     },
     {
-        files: ['eslint.config.js', 'tools/**/*.mjs'],
+        files: ['eslint.config.js', 'tools/**/*.mjs', 'tests/**/*.mjs'],
         ...tseslint.configs.disableTypeChecked,
     },
     {
-        files: ['tools/**/*.ts', 'tools/**/*.mjs', 'tests/**/*.ts', '*.config.ts'],
+        files: ['tools/**/*.ts', 'tools/**/*.mjs', 'tests/**/*.ts', 'tests/**/*.mjs', '*.config.ts'],
         languageOptions: { globals: { ...globals.node } },
         rules: { 'security/detect-non-literal-fs-filename': 'off' },
     },
