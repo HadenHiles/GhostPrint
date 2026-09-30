@@ -6,7 +6,7 @@ import type { LocalSchema, WidgetAnchor } from '@/shared/storage';
 import { isGpcExcepted } from '@/shared/gpc';
 import { PORT_NAME } from '@/shared/types';
 import type { LedgerSummary, Push, TrackerDetail } from '@/shared/types';
-import type { ProbeObservation } from './probes';
+import type { ProbeBridgeController, ProbeObservation } from './probes';
 
 /** Marker attribute used by the e2e harness and to prevent double injection. */
 const READY_ATTR = 'data-ghostprint-ready';
@@ -18,15 +18,17 @@ let widget: GhostCounter | null = null;
 let port: chrome.runtime.Port | null = null;
 let reconnectDelay = RECONNECT_BASE_MS;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-let stopProbeBridge: (() => void) | null = null;
+let probeBridge: ProbeBridgeController | null = null;
 let unsubscribeProbe: (() => void) | null = null;
 let particleOverlayEnabled = false;
+let autoXrayEnabled = true;
 let xrayEnabled = false;
 const probeObservations = new Map<string, ProbeObservation>();
 
 async function boot(): Promise<void> {
   if (!shouldRun()) return;
 
+  probeBridge = startProbeBridge();
   const settings = await readLocal();
   document.documentElement.setAttribute(READY_ATTR, '1');
   applySettings(settings);
@@ -41,11 +43,12 @@ function applySettings(settings: LocalSchema): void {
   }
 
   particleOverlayEnabled = settings.settings.particleOverlayEnabled;
+  autoXrayEnabled = settings.settings.autoXrayEnabled;
   if (port === null) connect();
-  if (particleOverlayEnabled || xrayEnabled) startProbes();
+  if (particleOverlayEnabled || autoXrayEnabled || xrayEnabled) startProbes();
   else stopProbes();
 
-  const needsHost = settings.settings.showCounter || particleOverlayEnabled || xrayEnabled;
+  const needsHost = settings.settings.showCounter || particleOverlayEnabled || autoXrayEnabled || xrayEnabled;
   if (!needsHost) {
     destroyWidget();
     return;
@@ -65,6 +68,7 @@ function applySettings(settings: LocalSchema): void {
           void disableCounter();
         },
         onXrayExit: resetXray,
+        onXrayEnter: toggleXray,
       },
       anchorFor(settings.widgetAnchors, origin),
       settings.settings.showCounter,
@@ -73,6 +77,7 @@ function applySettings(settings: LocalSchema): void {
     widget.setCounterVisible(settings.settings.showCounter);
   }
   widget.setOverlayEnabled(particleOverlayEnabled);
+  widget.setAutoXrayEnabled(autoXrayEnabled);
   widget.setXrayEnabled(xrayEnabled, [...probeObservations.values()]);
 
   if (settings.settings.showCounter) {
@@ -164,7 +169,12 @@ async function disableCounter(): Promise<void> {
   const state = await readLocal();
   xrayEnabled = false;
   await writeLocal({
-    settings: { ...state.settings, showCounter: false, particleOverlayEnabled: false },
+    settings: {
+      ...state.settings,
+      showCounter: false,
+      particleOverlayEnabled: false,
+      autoXrayEnabled: false,
+    },
   });
   teardown();
 }
@@ -177,8 +187,8 @@ function teardown(): void {
 }
 
 function startProbes(): void {
-  if (stopProbeBridge !== null) return;
-  stopProbeBridge = startProbeBridge();
+  if (unsubscribeProbe !== null) return;
+  probeBridge ??= startProbeBridge();
   unsubscribeProbe = subscribeToProbeObservations((observation) => {
     const key = `${observation.domain}\u0000${observation.selector ?? ''}`;
     if (!probeObservations.has(key) && probeObservations.size >= 64) {
@@ -187,15 +197,17 @@ function startProbes(): void {
     }
     probeObservations.set(key, observation);
     widget?.showProbeObservation(observation);
+    widget?.showAutomaticXrayCue(observation);
     widget?.updateXrayObservations([...probeObservations.values()]);
   });
+  probeBridge.activate();
 }
 
 function stopProbes(): void {
   unsubscribeProbe?.();
   unsubscribeProbe = null;
-  stopProbeBridge?.();
-  stopProbeBridge = null;
+  probeBridge?.stop();
+  probeBridge = null;
   probeObservations.clear();
 }
 
@@ -203,7 +215,7 @@ function toggleXray(): void {
   xrayEnabled = !xrayEnabled;
   void send({ type: 'TRACK_TELEMETRY', metric: 'xray_toggled' }).catch(() => {});
   if (xrayEnabled) startProbes();
-  else if (!particleOverlayEnabled) stopProbes();
+  else if (!particleOverlayEnabled && !autoXrayEnabled) stopProbes();
   void readLocal().then(applySettings);
 }
 
@@ -211,7 +223,7 @@ function resetXray(): void {
   if (!xrayEnabled) return;
   xrayEnabled = false;
   widget?.setXrayEnabled(false, []);
-  if (!particleOverlayEnabled) stopProbes();
+  if (!particleOverlayEnabled && !autoXrayEnabled) stopProbes();
   void readLocal().then(applySettings);
 }
 

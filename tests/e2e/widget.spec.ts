@@ -183,7 +183,14 @@ test('does not inject on muted origins', async ({ context, extensionPage }) => {
 test('does not inject when the counter is switched off', async ({ context, extensionPage }) => {
   await afterDefaultsSeeded(extensionPage);
   await extensionPage.evaluate(() =>
-    chrome.storage.local.set({ settings: { enabled: true, showCounter: false } }),
+    chrome.storage.local.set({
+      settings: {
+        enabled: true,
+        showCounter: false,
+        particleOverlayEnabled: false,
+        autoXrayEnabled: false,
+      },
+    }),
   );
 
   const page = await open(context);

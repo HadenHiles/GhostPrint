@@ -541,19 +541,23 @@ data value.
 
 ### `P2-04` X-Ray Vision hotkey — **`[x]*` implementation complete; browser shortcut and heap gates unverified**
 **Deps:** `P2-01`, `P2-02`
-**Implementation:** The registered command targets the active tab; the X-Ray layer dims
-the page, outlines up to 64 observed targets, draws category-colored SVG curves to
-domain labels grouped by corporate parent, announces a live summary, exits on Escape,
-and resets on SPA history navigation. Shortcut collision warning, direct toggle, repeat
-cleanup, click-through, and SPA reset have automated coverage. Playwright could not
+**Implementation:** With the default-on activity-cue setting, validated tracker probe
+events trigger a brief, throttled cue beside the observed target with an Explore action.
+Explore opens the full X-Ray layer, which dims the page, outlines up to 64 observed
+targets, draws category-colored SVG curves to domain labels grouped by corporate parent,
+announces a live summary, exits on Escape, and resets on SPA history navigation. Users
+can disable automatic cues in Settings. Shortcut collision warning, Settings-page
+fallback, direct toggle, repeat cleanup, click-through, and SPA reset have automated
+coverage.
+Playwright could not
 trigger Chrome's browser-level shortcut event, and a heap snapshot was not taken; these
 physical checks are unverified.*
 **Steps**
-1. Register `commands` entry `toggle-xray` → `Ctrl+Shift+X` / `Cmd+Shift+X`; handle collisions gracefully (Chrome silently drops conflicting bindings — detect via `chrome.commands.getAll()` and surface a warning in options).
-2. On toggle: dim the page with a shadow-root overlay, outline instrumented elements, and draw SVG bezier lines from each element to a labeled node representing the third-party domain.
-3. Label nodes cluster by corporate parent; lines are colored by category.
-4. `Esc` exits. State is per-tab and resets on navigation.
-5. Full keyboard accessibility and an announced ARIA live-region summary for screen-reader users.
+1. When a validated third-party probe signal arrives, automatically show a brief, throttled cue beside its target. The cue identifies the third-party domain and provides an **Explore** action; it must never block the page or require a click to dismiss.
+2. Explore or the `toggle-xray` command (`Ctrl+Shift+X` / `Cmd+Shift+X`) opens the full view: dim the page inside the closed shadow root, outline observed targets, and draw category-colored SVG curves to third-party domain nodes.
+3. Group full-view nodes by corporate parent and cap the view to 64 observations / 12 visible domains; unseen domains remain summarized in the live region.
+4. `Esc` exits. X-Ray resets on navigation, and the transient cue is disabled by the user-facing automatic-cues setting.
+5. Preserve keyboard access and an announced ARIA live-region summary. If Chrome drops the suggested shortcut, the Options button is the direct fallback.
 
 **Done when:** toggling on/off 20 times on a heavy page leaves no residual DOM, no leaked RAF loops, and no memory growth (heap snapshot delta < 1 MB).
 

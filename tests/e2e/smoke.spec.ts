@@ -13,6 +13,8 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
             showCounter: boolean;
             particleOverlayEnabled: boolean;
             weeklyReportNotificationEnabled: boolean;
+            gpcEnabled: boolean;
+            autoXrayEnabled: boolean;
           } | undefined;
         }),
       { timeout: 10_000 },
@@ -23,6 +25,7 @@ test('service worker boots and seeds default settings', async ({ serviceWorker }
       particleOverlayEnabled: false,
       weeklyReportNotificationEnabled: false,
       gpcEnabled: false,
+      autoXrayEnabled: true,
     });
 });
 
@@ -96,6 +99,29 @@ test('weekly report notifications are opt-in and persist from Options', async ({
       }),
     )
     .toBe(true);
+});
+
+test('automatic X-Ray cues default on and can be disabled from Options', async ({
+  context,
+  extensionId,
+  extensionPage,
+}) => {
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options/index.html`);
+  const toggle = options.locator('#auto-xray-enabled');
+  await expect(toggle).toBeChecked();
+  await toggle.uncheck();
+
+  await expect
+    .poll(() =>
+      extensionPage.evaluate(async () => {
+        const local = await chrome.storage.local.get<{
+          settings?: { autoXrayEnabled?: boolean };
+        }>('settings');
+        return local.settings?.autoXrayEnabled;
+      }),
+    )
+    .toBe(false);
 });
 
 test('GPC defaults off and hostname exceptions persist from Options', async ({

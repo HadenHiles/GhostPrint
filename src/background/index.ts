@@ -78,6 +78,13 @@ installRouter(async (request: Request, sender) => {
       return { type: 'TELEMETRY_STATUS', endpointConfigured: destination !== null, destination };
     }
 
+    case 'TOGGLE_XRAY': {
+      const tabId = await resolveTabId(sender);
+      if (tabId === null) throw new Error('No browser page is available for X-Ray.');
+      await chrome.tabs.sendMessage(tabId, { type: 'GHOSTPRINT_TOGGLE_XRAY' });
+      return { type: 'XRAY_TOGGLED' };
+    }
+
     case 'CLEAR_ALL_DATA':
       clear();
       resetHistory();

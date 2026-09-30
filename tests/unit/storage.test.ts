@@ -16,6 +16,7 @@ describe('local storage migration', () => {
       particleOverlayEnabled: false,
       weeklyReportNotificationEnabled: false,
       gpcEnabled: false,
+      autoXrayEnabled: true,
     });
     expect(migrated.mutedOrigins).toEqual(['https://example.com']);
   });
@@ -25,6 +26,7 @@ describe('local storage migration', () => {
     expect(DEFAULT_LOCAL.settings.particleOverlayEnabled).toBe(false);
     expect(DEFAULT_LOCAL.settings.weeklyReportNotificationEnabled).toBe(false);
     expect(DEFAULT_LOCAL.settings.gpcEnabled).toBe(false);
+    expect(DEFAULT_LOCAL.settings.autoXrayEnabled).toBe(true);
     expect(DEFAULT_LOCAL.gpcExceptions).toEqual([]);
   });
 
@@ -40,6 +42,7 @@ describe('local storage migration', () => {
       particleOverlayEnabled: true,
       weeklyReportNotificationEnabled: false,
       gpcEnabled: false,
+      autoXrayEnabled: true,
     });
   });
 

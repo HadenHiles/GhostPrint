@@ -146,7 +146,7 @@ test('clear data empties storage and resets the view', async ({
   expect(after.mutedOrigins).toEqual([]);
   expect(after.ledgerKeys).toBe(0);
   // Defaults are restored rather than leaving the extension in an unconfigured state.
-  expect(after.schemaVersion).toBe(5);
+  expect(after.schemaVersion).toBe(6);
 
   await expect(popup.locator('#week-total')).toHaveText('0');
 });

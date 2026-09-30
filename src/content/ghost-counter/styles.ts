@@ -59,6 +59,32 @@ export const WIDGET_CSS = `
 .xray-label { fill: #fff; font: 11px/1.2 system-ui, sans-serif; paint-order: stroke; stroke: #10131a; stroke-width: 3px; stroke-linejoin: round; }
 .xray-status { position: absolute; left: 16px; bottom: 16px; max-width: min(440px, calc(100vw - 32px)); padding: 8px 10px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 6px; background: #10131a; color: #f4f7ff; font-size: 12px; line-height: 1.4; }
 
+.xray-cue {
+  position: fixed;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(310px, calc(100vw - 24px));
+  min-height: 38px;
+  padding: 6px 8px 6px 12px;
+  border: 1px solid rgb(52 209 191 / 65%);
+  border-radius: 8px;
+  background: #101820;
+  color: #f7f4eb;
+  box-shadow: 0 4px 18px rgb(0 0 0 / 28%);
+  font-size: 11px;
+  line-height: 1.3;
+  pointer-events: auto;
+  animation: xray-cue-in 180ms ease-out both;
+}
+
+.xray-cue[hidden] { display: none !important; }
+.xray-cue span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.xray-cue-action { flex: 0 0 auto; border: 0; border-radius: 5px; padding: 5px 8px; background: #34d1bf; color: #101820; font: inherit; font-weight: 700; cursor: pointer; }
+.xray-cue-action:focus-visible { outline: 2px solid #ffce47; outline-offset: 2px; }
+@keyframes xray-cue-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
 @media (prefers-color-scheme: light) {
   .root {
     --bg: #ffffff;
@@ -223,5 +249,6 @@ export const WIDGET_CSS = `
 @media (prefers-reduced-motion: reduce) {
   .pill { transition: none; }
   .pill:hover { transform: none; }
+  .xray-cue { animation: none; }
 }
 `;

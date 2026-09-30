@@ -63,6 +63,7 @@ function isRequest(value: unknown): value is Request {
     type === 'GET_WEEKLY_REPORT' ||
     type === 'TRACK_TELEMETRY' ||
     type === 'GET_TELEMETRY_STATUS' ||
+    type === 'TOGGLE_XRAY' ||
     type === 'CLEAR_ALL_DATA'
   );
 }

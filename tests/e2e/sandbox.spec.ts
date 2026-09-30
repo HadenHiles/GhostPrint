@@ -235,6 +235,54 @@ test('X-Ray resets on SPA history navigation', async ({ context, extensionPage }
   await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
 });
 
+test('automatic tracker cue exposes a keyboard-accessible Explore action', async ({ context, extensionPage }) => {
+  const page = await openSandbox(context, '/probe');
+  await extensionPage.evaluate(async () => {
+    const stored = await chrome.storage.local.get<{ settings: Record<string, unknown> }>('settings');
+    await chrome.storage.local.set({
+      schemaVersion: 6,
+      settings: { ...stored.settings, autoXrayEnabled: true },
+    });
+  });
+  await page.reload();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const messages = (window as unknown as { __ghostprintProbeMessages: Record<string, unknown>[] })
+          .__ghostprintProbeMessages;
+        return messages.some((message) => message.type === 'GHOSTPRINT_PROBE_EVENT');
+      }),
+    )
+    .toBe(true);
+
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.locator(WIDGET)).toHaveAttribute('data-xray-active', 'true');
+});
+
+test('Settings button toggles X-Ray on the last active browser page', async ({
+  context,
+  extensionId,
+}) => {
+  const page = await openSandbox(context, '/shopify');
+  await page.bringToFront();
+
+  const options = await context.newPage();
+  await options.goto(`chrome-extension://${extensionId}/options/index.html`);
+  await options.locator('#xray-toggle').click();
+  await expect(page.locator(WIDGET)).toHaveAttribute('data-xray-active', 'true');
+  await expect(options.locator('#xray-status')).toHaveText(
+    'X-Ray toggled on the current page. Press Escape to exit.',
+  );
+
+  await page.bringToFront();
+  await page.keyboard.press('Escape');
+  await expect(page.locator(WIDGET)).not.toHaveAttribute('data-xray-active', 'true');
+});
+
 test('GPC sets the page property and DNR header rule, then honors site exceptions', async ({
   context,
   extensionPage,

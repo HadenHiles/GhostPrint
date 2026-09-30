@@ -1,5 +1,6 @@
 const CHANNEL = 'ghostprint-probe';
 const INIT_TYPE = 'GHOSTPRINT_PROBE_INIT';
+const START_TYPE = 'GHOSTPRINT_PROBE_START';
 const EVENT_TYPE = 'GHOSTPRINT_PROBE_EVENT';
 const STOP_TYPE = 'GHOSTPRINT_PROBE_STOP';
 const GPC_CHANNEL = 'ghostprint-gpc';
@@ -29,6 +30,7 @@ interface ProbeMessage {
 
 let nonce: string | null = null;
 let recorded = 0;
+let probesInstalled = false;
 const originalGpcDescriptor = Object.getOwnPropertyDescriptor(navigator, 'globalPrivacyControl');
 const wrappedMethods: {
   owner: object;
@@ -85,9 +87,31 @@ function onInit(event: MessageEvent<unknown>): void {
 
   nonce = event.data.nonce;
   window.removeEventListener('message', onInit);
+  window.addEventListener('message', onStart);
   window.addEventListener('message', onStop);
   window.postMessage({ channel: CHANNEL, type: 'GHOSTPRINT_PROBE_READY', nonce }, location.origin);
+}
+
+function onStart(event: MessageEvent<unknown>): void {
+  if (
+    event.source !== window ||
+    event.origin !== location.origin ||
+    typeof event.data !== 'object' ||
+    event.data === null ||
+    !('channel' in event.data) ||
+    !('type' in event.data) ||
+    !('nonce' in event.data) ||
+    event.data.channel !== CHANNEL ||
+    event.data.type !== START_TYPE ||
+    event.data.nonce !== nonce ||
+    probesInstalled
+  ) {
+    return;
+  }
+
+  recorded = 0;
   installProbes();
+  probesInstalled = true;
 }
 
 function onStop(event: MessageEvent<unknown>): void {
@@ -107,12 +131,15 @@ function onStop(event: MessageEvent<unknown>): void {
   }
 
   window.removeEventListener('message', onStop);
+  window.removeEventListener('message', onStart);
   for (const entry of wrappedMethods) {
     const current = Object.getOwnPropertyDescriptor(entry.owner, entry.name);
     if (current?.value === entry.wrapped) Object.defineProperty(entry.owner, entry.name, entry.descriptor);
   }
   wrappedMethods.length = 0;
   nonce = null;
+  probesInstalled = false;
+  window.addEventListener('message', onInit);
 }
 
 function isInitMessage(value: unknown): value is { channel: typeof CHANNEL; type: typeof INIT_TYPE; nonce: string } {

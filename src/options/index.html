@@ -79,8 +79,11 @@
         <h1>GhostPrint settings</h1>
         <p id="xray-warning" role="status" hidden>X-Ray's shortcut is unavailable. Set it in <a
                 href="chrome://extensions/shortcuts" target="_blank" rel="noreferrer">extension shortcuts</a>.</p>
+        <button id="xray-toggle" type="button">Toggle X-Ray on current page</button>
+        <p id="xray-status" role="status"></p>
         <label><input type="checkbox" id="enabled" /> Enable tracking detection</label>
         <label><input type="checkbox" id="showCounter" /> Show the Ghost Counter on pages</label>
+        <label><input type="checkbox" id="auto-xray-enabled" /> Show automatic X-Ray activity cues</label>
         <label><input type="checkbox" id="weekly-report-notification" /> Notify me when the weekly report is
             ready</label>
         <section aria-labelledby="gpc-heading">

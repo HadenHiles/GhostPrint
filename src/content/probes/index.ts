@@ -5,6 +5,7 @@ import type { TrackerCategory } from '@/shared/types';
 const CHANNEL = 'ghostprint-probe';
 const EVENT_TYPE = 'GHOSTPRINT_PROBE_EVENT';
 const READY_TYPE = 'GHOSTPRINT_PROBE_READY';
+const START_TYPE = 'GHOSTPRINT_PROBE_START';
 const STOP_TYPE = 'GHOSTPRINT_PROBE_STOP';
 const APIS = new Set([
   'addEventListener',
@@ -31,10 +32,18 @@ type ProbeListener = (observation: ProbeObservation) => void;
 
 const listeners = new Set<ProbeListener>();
 
-/** Starts the MAIN-world bridge. Observations are ephemeral and stay in this page. */
-export function startProbeBridge(): () => void {
+export interface ProbeBridgeController {
+  activate(): void;
+  stop(): void;
+}
+
+/** Prepares the bridge at document_start; API wrappers activate only after settings are read. */
+export function startProbeBridge(): ProbeBridgeController {
   const nonce = createNonce();
   let ready = false;
+  let requested = false;
+  let started = false;
+  let stopped = false;
   let attempts = 0;
 
   const onMessage = (event: MessageEvent<unknown>): void => {
@@ -45,14 +54,21 @@ export function startProbeBridge(): () => void {
     if (message.type === READY_TYPE) {
       ready = true;
       window.clearInterval(retryTimer);
+      if (requested) postStart();
       return;
     }
-    if (!ready || message.type !== EVENT_TYPE) return;
+    if (!ready || !started || message.type !== EVENT_TYPE) return;
 
     const observation = parseProbeMessage(message, nonce, location.href);
     if (observation !== null) {
-      for (const listener of listeners) listener(observation);
+      for (const listener of [...listeners]) listener(observation);
     }
+  };
+
+  const postStart = (): void => {
+    if (stopped || !ready || started) return;
+    started = true;
+    window.postMessage({ channel: CHANNEL, type: START_TYPE, nonce }, location.origin);
   };
 
   const postInit = (): void => {
@@ -68,10 +84,18 @@ export function startProbeBridge(): () => void {
   postInit();
   const retryTimer = window.setInterval(postInit, 50);
 
-  return () => {
+  return {
+    activate: () => {
+      requested = true;
+      postStart();
+    },
+    stop: () => {
+      if (stopped) return;
+      stopped = true;
     window.postMessage({ channel: CHANNEL, type: STOP_TYPE, nonce }, location.origin);
     window.clearInterval(retryTimer);
     window.removeEventListener('message', onMessage);
+    },
   };
 }
 

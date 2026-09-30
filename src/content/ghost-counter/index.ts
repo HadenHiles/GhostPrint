@@ -33,6 +33,7 @@ export interface WidgetCallbacks {
   onMuteOrigin: () => void;
   onDisable: () => void;
   onXrayExit: () => void;
+  onXrayEnter: () => void;
 }
 
 export class GhostCounter {
@@ -75,7 +76,7 @@ export class GhostCounter {
     this.container.className = 'root';
     this.root.appendChild(this.container);
     this.container.hidden = !showCounter;
-    this.xray = new XRayOverlay(this.root, callbacks.onXrayExit);
+    this.xray = new XRayOverlay(this.root, callbacks.onXrayExit, callbacks.onXrayEnter);
 
     this.anchor = pickAnchor(this.host, preferredAnchor);
     this.applyHostStyle();
@@ -116,6 +117,14 @@ export class GhostCounter {
     if (enabled) this.host.setAttribute('data-xray-active', 'true');
     else this.host.removeAttribute('data-xray-active');
     this.xray.setEnabled(enabled, observations);
+  }
+
+  setAutoXrayEnabled(enabled: boolean): void {
+    this.xray.setAutoCueEnabled(enabled);
+  }
+
+  showAutomaticXrayCue(observation: ProbeObservation): void {
+    this.xray.showAutomaticCue(observation);
   }
 
   updateXrayObservations(observations: ProbeObservation[]): void {

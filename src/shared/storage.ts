@@ -1,7 +1,7 @@
 import type { TabLedger } from './types';
 import type { TelemetryBatch, TelemetryCohort, TelemetryConsent } from './telemetry-types';
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export interface LocalSchema {
   schemaVersion: number;
@@ -25,6 +25,7 @@ export interface Settings {
   particleOverlayEnabled: boolean;
   weeklyReportNotificationEnabled: boolean;
   gpcEnabled: boolean;
+  autoXrayEnabled: boolean;
 }
 
 export type WidgetAnchor = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
@@ -37,6 +38,7 @@ export const DEFAULT_LOCAL: LocalSchema = {
     particleOverlayEnabled: false,
     weeklyReportNotificationEnabled: false,
     gpcEnabled: false,
+    autoXrayEnabled: true,
   },
   widgetAnchors: {},
   mutedOrigins: [],
@@ -75,6 +77,7 @@ export function migrate(
     case 2:
     case 3:
     case 4:
+    case 5:
     case SCHEMA_VERSION:
       return {
         ...DEFAULT_LOCAL,

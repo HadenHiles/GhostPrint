@@ -4,10 +4,13 @@ import { normalizeGpcException } from '@/shared/gpc';
 
 const enabled = document.querySelector<HTMLInputElement>('#enabled');
 const showCounter = document.querySelector<HTMLInputElement>('#showCounter');
+const autoXrayEnabled = document.querySelector<HTMLInputElement>('#auto-xray-enabled');
 const weeklyReportNotification = document.querySelector<HTMLInputElement>('#weekly-report-notification');
 const clear = document.querySelector<HTMLButtonElement>('#clear');
 const cleared = document.querySelector<HTMLParagraphElement>('#cleared');
 const xrayWarning = document.querySelector<HTMLParagraphElement>('#xray-warning');
+const xrayToggle = document.querySelector<HTMLButtonElement>('#xray-toggle');
+const xrayStatus = document.querySelector<HTMLParagraphElement>('#xray-status');
 const gpcEnabled = document.querySelector<HTMLInputElement>('#gpc-enabled');
 const exceptionInput = document.querySelector<HTMLInputElement>('#gpc-exception-input');
 const exceptionAdd = document.querySelector<HTMLButtonElement>('#gpc-exception-add');
@@ -17,6 +20,7 @@ void (async () => {
   if (
     enabled === null ||
     showCounter === null ||
+    autoXrayEnabled === null ||
     weeklyReportNotification === null ||
     gpcEnabled === null ||
     exceptionInput === null ||
@@ -29,6 +33,7 @@ void (async () => {
   const state = await readLocal();
   enabled.checked = state.settings.enabled;
   showCounter.checked = state.settings.showCounter;
+  autoXrayEnabled.checked = state.settings.autoXrayEnabled;
   weeklyReportNotification.checked = state.settings.weeklyReportNotificationEnabled;
   gpcEnabled.checked = state.settings.gpcEnabled;
   renderExceptions(state.gpcExceptions);
@@ -40,6 +45,7 @@ void (async () => {
         ...current.settings,
         enabled: enabled.checked,
         showCounter: showCounter.checked,
+        autoXrayEnabled: autoXrayEnabled.checked,
         weeklyReportNotificationEnabled: weeklyReportNotification.checked,
         gpcEnabled: gpcEnabled.checked,
       },
@@ -48,6 +54,7 @@ void (async () => {
 
   enabled.addEventListener('change', () => void persist());
   showCounter.addEventListener('change', () => void persist());
+  autoXrayEnabled.addEventListener('change', () => void persist());
   weeklyReportNotification.addEventListener('change', () => void persist());
   gpcEnabled.addEventListener('change', () => void persist());
 
@@ -87,6 +94,21 @@ void (async () => {
       xrayWarning.hidden = command !== undefined && command.shortcut !== '';
     });
   }
+
+  xrayToggle?.addEventListener('click', () => {
+    if (xrayToggle === null) return;
+    xrayToggle.disabled = true;
+    void send({ type: 'TOGGLE_XRAY' })
+      .then(() => {
+        if (xrayStatus !== null) xrayStatus.textContent = 'X-Ray toggled on the current page. Press Escape to exit.';
+      })
+      .catch(() => {
+        if (xrayStatus !== null) xrayStatus.textContent = 'Open a browser page before toggling X-Ray.';
+      })
+      .finally(() => {
+        if (xrayToggle !== null) xrayToggle.disabled = false;
+      });
+  });
 
   clear.addEventListener('click', () => {
     void (async () => {

@@ -17,14 +17,16 @@ by browser tabs. It uses the request target and initiator only long enough to de
 whether the request is third-party and whether its hostname matches the bundled tracker
 dictionary.
 
-When detection and the default-off **Show probe effects** setting are enabled on an
-unmuted site, Phase 2 probes observe third-party scripts registering selected
-input-related event listeners, observing form elements, or calling network and
-fingerprinting APIs. A probe keeps only the API name, a tag/type-based element selector,
-a timestamp, and the script hostname long enough to classify it. The bridge passes only
-the hostname, not the script URL. It does not read event contents, form values, API
-arguments, request URLs, or request bodies. Probe observations are held in page memory
-only and are not added to stored history.
+When detection and the default-on **Show automatic X-Ray activity cues** setting are
+enabled on an unmuted site, Phase 2 probes observe third-party scripts registering
+selected input-related event listeners, observing form elements, or calling network and
+fingerprinting APIs. The cue is brief and target-adjacent; the full-page X-Ray is only
+shown after the user chooses Explore or toggles it manually. The separate **Show probe
+effects** particle setting remains default-off. A probe keeps only the API name, a
+tag/type-based element selector, a timestamp, and the script hostname long enough to
+classify it. The bridge passes only the hostname, not the script URL. It does not read
+event contents, form values, API arguments, request URLs, or request bodies. Probe
+observations are held in page memory only and are not added to stored history.
 
 GhostPrint does **not** read page text, form values, cookies, browsing history, bookmarks,
 passwords, downloads, or account information. It does not inject into subframes.
@@ -63,9 +65,10 @@ deletes this report.
 ### Settings
 
 Settings include whether detection, the counter, the default-off particle overlay, and
-default-off weekly report notifications are enabled, muted origins, and an optional
-per-origin widget anchor. The default-off Global Privacy Control setting and its hostname
-exceptions also remain on the device. Telemetry consent, a random cohort token rotated
+the default-on automatic X-Ray activity cues and default-off weekly report notifications
+are enabled, muted origins, and an optional per-origin widget anchor. The default-off
+Global Privacy Control setting and its hostname exceptions also remain on the device.
+Telemetry consent, a random cohort token rotated
 every seven days, hour-bucketed metric counts, installation date, and the one-time W4
 marker are stored locally. Refusing or revoking consent clears queued counts and the
 cohort token.
