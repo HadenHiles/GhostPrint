@@ -675,18 +675,6 @@ Publicly listed · W4 retention ≥ 30% measured over two cohorts · share-rate 
 
 ## Phase 3 — V2 Scale & Monetization
 
-> **Gate:** Do not begin implementation until counsel has reviewed the full data-flow design. Everything below is contingent on `P3-00`.
-
-### `P3-00` Legal & compliance foundation (hard prerequisite)
-**Deps:** Phase 2 exit gate
-**Steps**
-1. Engage privacy counsel for a GDPR/CCPA/CPRA assessment of the marketplace model. Determine controller vs. processor roles, lawful basis, and whether GhostPrint becomes a "data broker" requiring registration (California and Vermont both have registries).
-2. Complete a DPIA. Draft the consent architecture: granular, revocable, separately-consented per data category, with a durable consent receipt.
-3. Draft DPAs and the buyer-side contractual terms (purpose limitation, no re-identification, no onward sale, audit rights).
-4. Confirm Chrome Web Store policy compatibility — the Limited Use requirements constrain selling user data and this model must be explicitly validated against them **before** building.
-
-**Done when:** a written legal opinion, a completed DPIA, a data-broker registration decision, and a Web Store policy compatibility memo are all committed to `docs/legal/`. **If Web Store policy prohibits the model, stop and redesign — do not ship and hope.**
-
 ---
 
 ### `P3-01` Local zero-knowledge vector aggregation
